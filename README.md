@@ -161,10 +161,12 @@ Then in extension settings, set API base to `http://localhost:3000`.
 - Handle lookups hit only the configured API base (default: `redd.love`).
 - Block explorer queries hit the configured explorer base (default: `blockbook.reddcoin.com`).
 - The extension requests `activeTab` (not `<all_urls>`) — tab URL is only read when the popup is open.
-- Host permissions cover the 13 supported platforms for content script injection:
-  `twitter.com`, `x.com`, `reddit.com`, `youtube.com`, `twitch.tv`, `instagram.com`,
-  `tiktok.com`, `bsky.app`, 15 Mastodon instances, `rumble.com`, `truthsocial.com`,
-  `odysee.com`, `kick.com`, `github.com`.
+- Host permissions cover:
+  - **13 platform domains** for content script injection: `twitter.com`, `x.com`, `reddit.com`,
+    `youtube.com`, `twitch.tv`, `instagram.com`, `tiktok.com`, `bsky.app`, 15 Mastodon instances,
+    `rumble.com`, `truthsocial.com`, `odysee.com`, `kick.com`, `github.com`
+  - **`redd.love`** — required for the popup and service worker to call the ReddID identity API
+  - **`blockbook.reddcoin.com`** — required for on-chain balance and transaction fetches (configurable)
 - No personal data is transmitted — only the handle or social username being looked up.
 - Cache entries are stored in `chrome.storage.local` on-device and expire after 5 minutes.
 

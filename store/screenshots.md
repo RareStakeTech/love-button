@@ -56,7 +56,7 @@ Scene: Options page.
 - API Endpoint section: shows https://redd.love field
 - Block Explorer section: shows https://blockbook.reddcoin.com field with Blockbook explanation
 - Cache section: "0 entries" cache count, Clear cache button
-- About section: version 2.2.0, 6 platforms, MV3
+- About section: version 2.5.0, 13 platforms, MV3
 
 ---
 
@@ -64,4 +64,4 @@ Scene: Options page.
 
 Dark background (#080808), ReddCoin red (#E30613) branding.
 Text: "ReddID Love Button" large headline, "Tip creators with Ɍ RDD" subtitle.
-Logos of 6 supported platforms (small icons, bottom row).
+Platform icons row (show 8–10 of the 13 supported platforms).

@@ -36,15 +36,15 @@ function tryInject() {
   if (!detected) return;
   const { username } = detected;
 
-  ReddIDPlatformUtil.tryLookup(PLATFORM_ID, username, ({ identity }) => {
+  ReddIDPlatformUtil.tryLookup(PLATFORM_ID, username, ({ identity, apiBase }) => {
     // Also try lookup by local username alone (creator may have registered with just their local name)
     if (!identity) {
-      ReddIDPlatformUtil.tryLookup(PLATFORM_ID, detected.localUser, ({ identity: i2 }) => {
-        if (i2) inject(ReddIDPlatformUtil.tipUrl(i2));
+      ReddIDPlatformUtil.tryLookup(PLATFORM_ID, detected.localUser, ({ identity: i2, apiBase: ab2 }) => {
+        if (i2) inject(ReddIDPlatformUtil.tipUrl(i2, ab2));
       });
       return;
     }
-    inject(ReddIDPlatformUtil.tipUrl(identity));
+    inject(ReddIDPlatformUtil.tipUrl(identity, apiBase));
   });
 }
 

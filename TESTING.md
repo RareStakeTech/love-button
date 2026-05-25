@@ -128,6 +128,21 @@ Additional checks per platform:
 
 ---
 
+## 10. Host permissions (API + explorer)
+
+- [ ] Handle lookup works on a fresh install with no settings changed (requires `redd.love` host permission)
+- [ ] Balance and transactions load with no settings changed (requires `blockbook.reddcoin.com` host permission)
+- [ ] Changing API base URL in Settings routes lookups to the custom endpoint
+- [ ] Changing explorer URL in Settings routes balance fetches to the custom endpoint
+- [ ] No CORS errors appear in the service worker DevTools console
+
+## 11. Social proof label accuracy
+
+- [ ] A social proof with `verificationStatus: "verified"` shows 🔗 (Proof URL on record) — NOT a green checkmark
+- [ ] A social proof with `verificationStatus: "pending"` or no status shows ○ (Self-reported)
+- [ ] Hovering the 🔗 shows tooltip: "Proof URL on record (not independently verified)"
+- [ ] No badge anywhere says "Verified" for challenge-submitted proofs
+
 ## 10. Identity schema compatibility
 
 - [ ] Extension works against a **v1 API** response (bare `rddAddress` field, no `wallets[]`)

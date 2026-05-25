@@ -30,8 +30,8 @@ function tryInject() {
   if (!detected) return;
   const { username } = detected;
 
-  ReddIDPlatformUtil.tryLookup(PLATFORM_ID, username, ({ identity }) => {
-    if (identity) inject(ReddIDPlatformUtil.tipUrl(identity));
+  ReddIDPlatformUtil.tryLookup(PLATFORM_ID, username, ({ identity, apiBase }) => {
+    if (identity) inject(ReddIDPlatformUtil.tipUrl(identity, apiBase));
   });
 }
 

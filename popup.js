@@ -383,10 +383,13 @@ function renderSocialProofs(identity) {
     const badge = document.createElement('span');
     badge.className = 'social-badge';
     const icon = PLAT_ICONS[p.platform] ?? '🔗';
-    // Show ✓ only for challenge-post verified proofs; ○ for self-reported
-    const isVerified = p.verificationStatus === 'verified';
-    const statusMark = isVerified
-      ? '<span class="verified" title="Challenge verified">✓</span>'
+    // Show 🔗 when the user submitted a proof URL; ○ for bare self-reported entries.
+    // "Proof linked" means a challenge code was submitted and a proof URL is on record —
+    // the system does NOT independently verify the URL. Reserve "verified" for v0.5+
+    // when platform API or signed-proof verification is implemented.
+    const hasProof = p.verificationStatus === 'verified';
+    const statusMark = hasProof
+      ? '<span class="proof-linked" title="Proof URL on record (not independently verified)">🔗</span>'
       : '<span class="self-reported" title="Self-reported">○</span>';
     badge.innerHTML = `${icon} ${escapeHtml(p.username)}${statusMark}`;
     container.appendChild(badge);

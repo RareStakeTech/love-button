@@ -170,7 +170,9 @@
     "https://truthsocial.com/*",
     "https://odysee.com/*",
     "https://kick.com/*",
-    "https://github.com/*"
+    "https://github.com/*",
+    "https://redd.love/*",
+    "https://blockbook.reddcoin.com/*"
   ],
 
   "permissions": [

@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "lint": "web-ext lint --source-dir .",
-    "build:chrome": "web-ext build --source-dir . --artifacts-dir .. --filename \"love-button-chrome-{version}.zip\"",
+    "lint:firefox": "node build-firefox.js && web-ext lint --source-dir love-button-firefox",
+    "build:chrome": "web-ext build --source-dir . --artifacts-dir .. --filename \"love-button-chrome-{version}.zip\" --overwrite-dest --ignore-files CHANGELOG.md PLUGINS.md README.md TESTING.md build-firefox.js gen-icons.js package.json package-lock.json yarn.lock .web-ext-ignore \"love-button-firefox\" \"love-button-firefox/**\" \"store\" \"store/**\" \"icons/src\" \"icons/src/**\"",
     "build:firefox": "node build-firefox.js"
   },
   "devDependencies": {
