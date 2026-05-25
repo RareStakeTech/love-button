@@ -5,6 +5,41 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.5.1] — 2026-05-25
+
+### Changed
+- **`store/listing.md`** — rewritten for v2.5.0 / 13 platforms; full permission justifications for `redd.love` and `blockbook.reddcoin.com`; explicit no-custody, no-keys, no-analytics language; permission-by-permission breakdown matching the Chrome Web Store review format
+- **`store/screenshots.md`** — version references updated from 2.2.0 to 2.5.0; "6 platforms" expanded to "13 platforms" throughout; all screenshot scene descriptions updated to reflect current UI
+- **`options.html`** — "Platforms supported" list updated to all 13 live platforms: X, Reddit, YouTube, Twitch, Instagram, TikTok, Bluesky, Mastodon, Rumble, TruthSocial, Odysee, Kick, GitHub
+- **`README.md`** — Privacy section updated to list `redd.love` and `blockbook.reddcoin.com` as explicit host permissions with justifications; 13-platform support matrix reflects GitHub addition
+- **`TESTING.md`** — sections renumbered; added section 10 (Host permissions — API + explorer), section 11 (Social proof label accuracy — 🔗 vs ○ labels); section 11 (Firefox-specific), section 12 (Chrome packaging)
+
+---
+
+## [2.5.0] — 2026-05-25
+
+### Added
+- **GitHub content script** (`content/github.js`) — detects GitHub user profile pages (`github.com/{username}`); uses `RESERVED` set to skip non-profile paths (login, explore, marketplace, etc.); injects Tip RDD button into `.js-profile-editable-area` sidebar with `.p-note` and `.js-profile-edit-toggle` fallbacks; floating fallback at `top:72px right:16px`; SPA-aware via `popstate` + `watchSpa(600ms)`
+- **`package.json`** — formal devDependency on `web-ext ^8.3.0`; npm scripts: `lint` (Chrome), `lint:firefox` (builds Firefox folder then lints), `build:chrome` (web-ext zip with explicit `--ignore-files` to exclude dev files on Windows), `build:firefox` (Node.js patcher)
+- **`.web-ext-ignore`** — Chrome build exclusion list (belt-and-suspenders alongside `--ignore-files` in `build:chrome`)
+- **`build-firefox.js`** (rewritten) — now produces complete `love-button-firefox/` output directory by recursively copying all runtime files (excluding dev files via `EXCLUDE_NAMES` set); patches `manifest.json` in-place: converts `background.service_worker` → `background.scripts: [file]` (Firefox 109–120 compatibility), removes `"type":"module"` from background, overwrites `browser_specific_settings.gecko` block; omits `data_collection_permissions` (minItems:1 schema validation error until Mozilla publishes valid enum values); prints file count and testing instructions
+
+### Changed
+- **`manifest.json`** — version bumped to `2.5.0`; description shortened to 127 chars (`≤132` Chrome Web Store limit); `host_permissions` expanded to include `"https://redd.love/*"` and `"https://blockbook.reddcoin.com/*"` (required for cross-origin fetch from the service worker and popup in MV3); GitHub `content_scripts` and `host_permissions` entries added
+- **`background.js`** — `primaryRddAddress(identity)` helper added: reads `identity.wallets[]` (v2 API) finding the primary non-revoked RDD wallet, then falls back to `identity.rddAddress` (v1 API); `ADD_TO_HISTORY` handler updated to store the resolved address via `primaryRddAddress()` instead of the bare `rddAddress` field
+- **`popup.js`** — `primaryRddAddress()` helper added (matches background.js logic); `showResult()` now derives address via `primaryRddAddress(identity)` throughout; tab handler, copy address button, and `getBip21Uri()` all use `primaryRddAddress()`; social proof badge rendering updated: `verificationStatus === 'verified'` → `🔗` span with title "Proof URL on record (not independently verified)"; otherwise `○` "Self-reported" — removed misleading green checkmark
+- **`popup.html`** — version badge updated to v2.5; CSS `.verified` (green checkmark) replaced with `.proof-linked` (muted, 9px) and `.self-reported` (dim, 9px)
+- **`lib/reddid-platform-util.js`** — `tryLookup(platform, username, onFound)` now sends `GET_API_BASE` to the background service worker first, then passes `{ identity, apiBase }` (not just `{ identity }`) to the callback; this allows content scripts to respect the configured API base URL rather than hardcoding production
+- **`content/bluesky.js`**, **`mastodon.js`**, **`rumble.js`**, **`truthsocial.js`**, **`odysee.js`**, **`kick.js`**, **`github.js`** — all updated from `({ identity })` to `({ identity, apiBase })` callback signature; pass `apiBase` to `ReddIDPlatformUtil.tipUrl(identity, apiBase)`; mastodon nested fallback lookup also updated to `({ identity: i2, apiBase: ab2 })`
+
+### Fixed
+- **Social proof "Verified" label** — popup previously displayed a green `✓` for proofs with `verificationStatus: 'verified'`, implying independent verification. The backend records challenge submission but does not independently verify the proof URL. Changed to `🔗` with tooltip "Proof URL on record (not independently verified)". Self-reported proofs (no status or `pending`) show `○`. The word "verified" is reserved for future v0.5 platform API verification.
+- **Firefox background script format** — `build-firefox.js` now correctly converts `service_worker` to `scripts: [filename]` so the Firefox build is valid for Firefox 109+ (kept `strict_min_version: "109.0"` honest)
+- **Chrome build included dev files** — `.web-ext-ignore` alone was not respected on Windows; `build:chrome` script now passes explicit `--ignore-files` flags to `web-ext build`
+- **API base in content scripts** — tip URL in util-based content scripts previously hardcoded production `redd.love`; now fetches `GET_API_BASE` from background so custom API endpoints configured in Settings are respected
+
+---
+
 ## [2.4.0] — 2026-05-25
 
 ### Added

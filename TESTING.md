@@ -136,6 +136,8 @@ Additional checks per platform:
 - [ ] Changing explorer URL in Settings routes balance fetches to the custom endpoint
 - [ ] No CORS errors appear in the service worker DevTools console
 
+---
+
 ## 11. Social proof label accuracy
 
 - [ ] A social proof with `verificationStatus: "verified"` shows 🔗 (Proof URL on record) — NOT a green checkmark
@@ -143,7 +145,9 @@ Additional checks per platform:
 - [ ] Hovering the 🔗 shows tooltip: "Proof URL on record (not independently verified)"
 - [ ] No badge anywhere says "Verified" for challenge-submitted proofs
 
-## 10. Identity schema compatibility
+---
+
+## 12. Identity schema compatibility
 
 - [ ] Extension works against a **v1 API** response (bare `rddAddress` field, no `wallets[]`)
 - [ ] Extension works against a **v2 API** response (`wallets[]` array, `rddAddress` may be null)
@@ -153,7 +157,7 @@ Additional checks per platform:
 
 ---
 
-## 11. Firefox-specific
+## 13. Firefox-specific
 
 - [ ] `npm run build:firefox` completes without errors
 - [ ] Resulting `love-button-firefox/` manifest has `browser_specific_settings.gecko` intact
@@ -163,7 +167,7 @@ Additional checks per platform:
 
 ---
 
-## 12. Chrome packaging
+## 14. Chrome packaging
 
 - [ ] `npm run build:chrome` (or manual zip) produces a valid zip
 - [ ] Zip uploaded to Chrome Web Store developer dashboard passes automated review checks
