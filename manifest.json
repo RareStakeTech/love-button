@@ -1,0 +1,86 @@
+{
+  "manifest_version": 3,
+  "name": "ReddID — Tip with RDD",
+  "short_name": "ReddID Tip",
+  "version": "2.0.0",
+  "description": "Send ReddCoin (RDD) tips to creators on Twitter/X, Reddit, and YouTube. Powered by ReddID Next.",
+
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ReddID Tip Button",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "48":  "icons/icon48.png"
+    }
+  },
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://twitter.com/*",
+        "https://x.com/*"
+      ],
+      "js": ["content/twitter.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://www.reddit.com/user/*",
+        "https://www.reddit.com/u/*",
+        "https://reddit.com/user/*",
+        "https://reddit.com/u/*"
+      ],
+      "js": ["content/reddit.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/@*",
+        "https://www.youtube.com/channel/*",
+        "https://www.youtube.com/c/*",
+        "https://www.youtube.com/user/*"
+      ],
+      "js": ["content/youtube.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+
+  "host_permissions": [
+    "https://twitter.com/*",
+    "https://x.com/*",
+    "https://www.reddit.com/*",
+    "https://reddit.com/*",
+    "https://www.youtube.com/*"
+  ],
+
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

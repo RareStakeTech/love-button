@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReddID Tip</title>
+  <style>
+    :root {
+      --red: #CC1111;
+      --red-dark: #991010;
+      --bg: #080808;
+      --card: #111111;
+      --border: #252525;
+      --text: #f0f0f0;
+      --muted: #888;
+      --dim: #444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 320px;
+      min-height: 160px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-badge {
+      background: var(--red);
+      color: white;
+      font-weight: 800;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+
+    .brand-name {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .version {
+      font-size: 10px;
+      color: var(--dim);
+    }
+
+    /* ── Search bar ── */
+    .search-wrap {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-inner {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: #0d0d0d;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      overflow: hidden;
+    }
+
+    .search-prefix {
+      padding: 0 8px 0 12px;
+      color: var(--red);
+      font-weight: 700;
+      font-size: 15px;
+      line-height: 36px;
+      user-select: none;
+      background: transparent;
+    }
+
+    #search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 13px;
+      padding: 8px 0;
+      caret-color: var(--red);
+    }
+
+    #search-input::placeholder { color: var(--dim); }
+
+    #search-btn {
+      background: var(--red);
+      border: none;
+      color: white;
+      padding: 0 14px;
+      height: 36px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      transition: background 0.12s;
+    }
+
+    #search-btn:hover { background: var(--red-dark); }
+    #search-btn:disabled { background: #3a0a0a; cursor: not-allowed; }
+
+    /* ── States ── */
+    .state { padding: 16px 14px; }
+
+    .idle-text {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 20px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      background: rgba(204,17,17,0.1);
+      border: 1px solid rgba(204,17,17,0.3);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: #f87171;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* ── Result card ── */
+    .result-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .result-header {
+      padding: 14px;
+      background: linear-gradient(135deg, #1a0808, #110a0a);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-handle {
+      font-size: 10px;
+      color: #E53030;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .result-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .result-bio {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .result-address-section {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .address-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .address-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 7px 10px;
+    }
+
+    .address-text {
+      flex: 1;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 10px;
+      color: #d4d4d4;
+      word-break: break-all;
+      line-height: 1.4;
+      min-width: 0;
+    }
+
+    #copy-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.12s;
+      flex-shrink: 0;
+    }
+
+    #copy-btn.copied {
+      background: rgba(34,197,94,0.15);
+      border-color: rgba(34,197,94,0.4);
+      color: #4ade80;
+    }
+
+    .result-actions {
+      padding: 10px 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      background: var(--red);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      transition: background 0.12s;
+    }
+
+    .action-btn:hover { background: var(--red-dark); }
+
+    .action-btn-ghost {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      transition: background 0.12s;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer a {
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 10px;
+    }
+
+    .footer a:hover { color: var(--muted); }
+
+    /* ── Detected badge ── */
+    .detected-banner {
+      padding: 8px 14px;
+      background: rgba(204,17,17,0.07);
+      border-bottom: 1px solid rgba(204,17,17,0.2);
+      font-size: 11px;
+      color: #E53030;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <span class="brand-badge">REDD</span>
+      <span class="brand-name">ID Tip Button</span>
+    </div>
+    <span class="version">v2.0</span>
+  </div>
+
+  <!-- Detected on current page -->
+  <div class="detected-banner" id="detected-banner" style="display:none">
+    🔴 <span id="detected-text"></span>
+  </div>
+
+  <!-- Search bar -->
+  <div class="search-wrap">
+    <div class="search-inner">
+      <span class="search-prefix">@</span>
+      <input
+        type="text"
+        id="search-input"
+        placeholder="handle or @handle"
+        autocomplete="off"
+        autocapitalize="none"
+        spellcheck="false"
+        maxlength="30"
+      />
+      <button id="search-btn">Look up</button>
+    </div>
+  </div>
+
+  <!-- Dynamic content -->
+  <div class="state" id="state-container">
+
+    <!-- Idle -->
+    <div id="state-idle">
+      <p class="idle-text">
+        Enter a ReddID @handle above to find a creator's RDD address
+        and send a tip from your wallet.
+      </p>
+    </div>
+
+    <!-- Loading -->
+    <div id="state-loading" style="display:none">
+      <div class="loading">
+        <div class="spinner"></div>
+        Looking up @<span id="loading-handle"></span>…
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div id="state-error" style="display:none">
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <!-- Result -->
+    <div id="state-result" style="display:none">
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-handle" id="result-handle"></div>
+          <div class="result-name" id="result-name"></div>
+          <div class="result-bio" id="result-bio"></div>
+        </div>
+        <div class="result-address-section">
+          <div class="address-label">RDD Address</div>
+          <div class="address-row">
+            <div class="address-text" id="result-address"></div>
+            <button id="copy-btn">Copy</button>
+          </div>
+        </div>
+        <div class="result-actions">
+          <a class="action-btn" id="open-tip-page" href="#" target="_blank" rel="noopener">
+            Open tip page →
+          </a>
+          <button class="action-btn-ghost" id="clear-btn">Clear</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <a href="#" id="options-link">Settings</a>
+    <a href="https://redd.love" target="_blank" rel="noopener">redd.love</a>
+    <a href="https://www.reddcoin.com" target="_blank" rel="noopener">reddcoin.com</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
