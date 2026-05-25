@@ -231,6 +231,46 @@ function detectPlatform(url) {
     const m = p.match(/^\/@([a-zA-Z0-9_.]{1,24})\/?$/);
     if (m && !RESERVED.has(m[1].toLowerCase())) return { platform: 'tiktok', username: m[1] };
   }
+  if (h === 'github.com') {
+    const m = p.match(/^\/([A-Za-z0-9_-]{1,39})\/?$/);
+    if (m && !RESERVED.has(m[1].toLowerCase())) return { platform: 'github', username: m[1] };
+  }
+  if (h === 'bsky.app') {
+    const m = p.match(/^\/profile\/([^/?#]+)\/?$/);
+    if (m) return { platform: 'bluesky', username: m[1] };
+  }
+  // Mastodon — any instance that matches the /@user pattern
+  if (p.match(/^\/@([A-Za-z0-9_]{1,60})(?:@[^/?#]+)?\/?$/)) {
+    // Only fire for known Mastodon instances (avoid collisions with TruthSocial etc.)
+    const MASTODON_INSTANCES = new Set([
+      'mastodon.social', 'mastodon.online', 'fosstodon.org', 'infosec.exchange',
+      'mstdn.social', 'hachyderm.io', 'techhub.social', 'mastodon.world',
+      'aus.social', 'social.coop', 'sigmoid.social', 'indieweb.social',
+      'mastodon.gamedev.place', 'scholar.social', 'universeodon.com',
+    ]);
+    if (MASTODON_INSTANCES.has(h)) {
+      const m = p.match(/^\/@([A-Za-z0-9_]{1,60})(?:@[^/?#]+)?\/?$/);
+      if (m) return { platform: 'mastodon', username: `${m[1]}@${h}` };
+    }
+  }
+  if (h === 'truthsocial.com') {
+    const m = p.match(/^\/@([A-Za-z0-9_]{1,50})\/?$/);
+    if (m && !RESERVED.has(m[1].toLowerCase())) return { platform: 'truthsocial', username: m[1] };
+  }
+  if (h === 'rumble.com') {
+    const mc = p.match(/^\/c\/([A-Za-z0-9_-]{2,50})\/?$/);
+    if (mc) return { platform: 'rumble', username: mc[1] };
+    const mu = p.match(/^\/user\/([A-Za-z0-9_-]{2,50})\/?$/);
+    if (mu) return { platform: 'rumble', username: mu[1] };
+  }
+  if (h === 'odysee.com') {
+    const m = p.match(/^\/@([A-Za-z0-9_-]{2,60})(?::[a-f0-9]+)?\/?$/);
+    if (m && !RESERVED.has(m[1].toLowerCase())) return { platform: 'odysee', username: m[1] };
+  }
+  if (h === 'kick.com') {
+    const m = p.match(/^\/([A-Za-z0-9_]{3,30})\/?$/);
+    if (m && !RESERVED.has(m[1].toLowerCase())) return { platform: 'kick', username: m[1] };
+  }
   return null;
 }
 
@@ -297,8 +337,19 @@ function resetTabs() {
 // ── Social proof badges ───────────────────────────────────────────────────────
 
 const PLAT_ICONS = {
-  twitter: '𝕏', youtube: '▶', reddit: '●', twitch: '⬟',
-  instagram: '◈', tiktok: '♪', github: '⌥',
+  twitter:     '𝕏',
+  youtube:     '▶',
+  reddit:      '●',
+  twitch:      '⬟',
+  instagram:   '◈',
+  tiktok:      '♪',
+  github:      '⌥',
+  bluesky:     '☁',
+  mastodon:    '🐘',
+  rumble:      '▣',
+  truthsocial: '◉',
+  odysee:      '◎',
+  kick:        '⚡',
 };
 
 function renderSocialProofs(identity) {

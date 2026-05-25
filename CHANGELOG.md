@@ -5,6 +5,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.4.0] — 2026-05-25
+
+### Added
+- **Bluesky (AT Protocol) support** — `content/bluesky.js` detects `bsky.app/profile/{handle}` pages; tries `[data-testid="followBtn"]` and `[aria-label="Follow"]` selectors with floating fallback
+- **Mastodon / ActivityPub support** — `content/mastodon.js` detects `/@username` on 15 curated instances; stores fully-qualified `user@instance.social` handle; double-lookup (full handle first, then local username) for maximum match rate
+- **Rumble support** — `content/rumble.js` detects both `/c/{channel}` and `/user/{username}` patterns; targets creator header action area
+- **TruthSocial support** — `content/truthsocial.js` detects `/@username` (Mastodon-fork); reuses Mastodon-style DOM selectors with TruthSocial-specific additions
+- **Odysee support** — `content/odysee.js` detects `/@ChannelName:claimId?` pattern; strips claim ID for lookup; targets `.channel-header__actions` and siblings
+- **Kick support** — `content/kick.js` detects `/{username}` root-path streamer pages; targets subscribe/follow button container
+- **`lib/reddid-platform-util.js`** — shared utility library (`window.ReddIDPlatformUtil`) with: `createButton()`, `floatingButton()`, `waitForElement()`, `removeButton()`, `watchSpa()`, `lookupSocial()`, `lookupHandle()`, `tryLookup()`, `tipUrl()` — eliminates per-script boilerplate
+- **`PLUGINS.md`** — formal plugin specification v1.0: contract, API reference, step-by-step guide with full code template, federated-platform guidance, 15-item platform checklist, submission process
+
+### Changed
+- `manifest.json` bumped to `2.4.0`; added `content_scripts` and `host_permissions` entries for all 6 new platforms; Mastodon list covers 15 popular instances; all new scripts load `lib/reddid-platform-util.js` as a dependency before the platform script; extension description updated to list all supported platforms
+- `popup.js` — `PLAT_ICONS` extended with icons for `bluesky` (☁), `mastodon` (🐘), `rumble` (▣), `truthsocial` (◉), `odysee` (◎), `kick` (⚡), `github` (⌥); `detectPlatform()` extended to detect all 6 new platforms plus GitHub from the current tab URL, enabling the auto-lookup detected-banner for these platforms
+
+---
+
 ## [2.3.0] — 2026-05-25
 
 ### Added

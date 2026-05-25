@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "ReddID — Tip with RDD",
   "short_name": "ReddID Tip",
-  "version": "2.3.0",
-  "description": "Send Ɍ ReddCoin tips to creators on Twitter/X, Reddit, YouTube, Twitch, Instagram, and TikTok. Powered by ReddID Next.",
+  "version": "2.4.0",
+  "description": "Send Ɍ ReddCoin tips to creators on Twitter/X, Reddit, YouTube, Twitch, Instagram, TikTok, Bluesky, Mastodon, Rumble, TruthSocial, Odysee, Kick, and GitHub. Powered by ReddID Next.",
 
   "icons": {
     "16":  "icons/icon16.png",
@@ -80,6 +80,58 @@
       "js": ["content/tiktok.js"],
       "run_at": "document_idle",
       "all_frames": false
+    },
+    {
+      "matches": ["https://bsky.app/*"],
+      "js": ["lib/reddid-platform-util.js", "content/bluesky.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://mastodon.social/*",
+        "https://mastodon.online/*",
+        "https://fosstodon.org/*",
+        "https://infosec.exchange/*",
+        "https://mstdn.social/*",
+        "https://hachyderm.io/*",
+        "https://techhub.social/*",
+        "https://mastodon.world/*",
+        "https://aus.social/*",
+        "https://social.coop/*",
+        "https://sigmoid.social/*",
+        "https://indieweb.social/*",
+        "https://mastodon.gamedev.place/*",
+        "https://scholar.social/*",
+        "https://universeodon.com/*"
+      ],
+      "js": ["lib/reddid-platform-util.js", "content/mastodon.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["https://rumble.com/*"],
+      "js": ["lib/reddid-platform-util.js", "content/rumble.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["https://truthsocial.com/*"],
+      "js": ["lib/reddid-platform-util.js", "content/truthsocial.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["https://odysee.com/*"],
+      "js": ["lib/reddid-platform-util.js", "content/odysee.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["https://kick.com/*"],
+      "js": ["lib/reddid-platform-util.js", "content/kick.js"],
+      "run_at": "document_idle",
+      "all_frames": false
     }
   ],
 
@@ -91,7 +143,27 @@
     "https://www.youtube.com/*",
     "https://www.twitch.tv/*",
     "https://www.instagram.com/*",
-    "https://www.tiktok.com/*"
+    "https://www.tiktok.com/*",
+    "https://bsky.app/*",
+    "https://mastodon.social/*",
+    "https://mastodon.online/*",
+    "https://fosstodon.org/*",
+    "https://infosec.exchange/*",
+    "https://mstdn.social/*",
+    "https://hachyderm.io/*",
+    "https://techhub.social/*",
+    "https://mastodon.world/*",
+    "https://aus.social/*",
+    "https://social.coop/*",
+    "https://sigmoid.social/*",
+    "https://indieweb.social/*",
+    "https://mastodon.gamedev.place/*",
+    "https://scholar.social/*",
+    "https://universeodon.com/*",
+    "https://rumble.com/*",
+    "https://truthsocial.com/*",
+    "https://odysee.com/*",
+    "https://kick.com/*"
   ],
 
   "permissions": [
