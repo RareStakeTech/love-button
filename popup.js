@@ -86,6 +86,24 @@ function formatRdd(val) {
   return `${n.toFixed(4)} Ɍ`;
 }
 
+/**
+ * Extract the primary RDD address from a v1 or v2 identity object.
+ * v2 identities expose wallets[]; v1 used a bare rddAddress string.
+ * Falls back to rddAddress so the popup works during the schema migration window.
+ */
+function primaryRddAddress(identity) {
+  if (!identity) return null;
+  if (Array.isArray(identity.wallets)) {
+    const primary = identity.wallets.find(
+      w => w.chain === 'rdd' && w.primary && !w.revokedAt
+    );
+    if (primary) return primary.address;
+    const any = identity.wallets.find(w => w.chain === 'rdd' && !w.revokedAt);
+    if (any) return any.address;
+  }
+  return identity.rddAddress ?? null;
+}
+
 function resetBalance() {
   balanceLoading.style.display = '';
   balanceData.style.display    = 'none';
@@ -146,8 +164,9 @@ async function showResult(identity) {
     resultBio.style.display = 'none';
   }
 
-  resultAddress.textContent = identity.rddAddress || '—';
-  setAddrTypeBadge(identity.rddAddress);
+  const rddAddr = primaryRddAddress(identity);
+  resultAddress.textContent = rddAddr || '—';
+  setAddrTypeBadge(rddAddr);
 
   const { base } = await sendMsg({ type: 'GET_API_BASE' });
   currentApiBase = base || 'https://redd.love';
@@ -158,8 +177,8 @@ async function showResult(identity) {
 
   sendMsg({ type: 'ADD_TO_HISTORY', payload: { identity } });
 
-  if (identity.rddAddress) {
-    fetchBalance(identity.rddAddress);
+  if (rddAddr) {
+    fetchBalance(rddAddr);
   } else {
     balanceLoading.style.display = 'none';
     balanceError.style.display   = '';
@@ -323,8 +342,8 @@ tabBtns.forEach(btn => {
     const target = btn.dataset.tab;
     tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === target));
     tabPanels.forEach(p => p.classList.toggle('active', p.id === `tab-${target}`));
-    if (target === 'txns' && currentIdentity?.rddAddress) {
-      loadTxns(currentIdentity.rddAddress);
+    if (target === 'txns' && primaryRddAddress(currentIdentity)) {
+      loadTxns(primaryRddAddress(currentIdentity));
     }
   });
 });
@@ -364,8 +383,12 @@ function renderSocialProofs(identity) {
     const badge = document.createElement('span');
     badge.className = 'social-badge';
     const icon = PLAT_ICONS[p.platform] ?? '🔗';
-    const verified = p.proofUrl ? '<span class="verified" title="Verified">✓</span>' : '';
-    badge.innerHTML = `${icon} ${escapeHtml(p.username)}${verified}`;
+    // Show ✓ only for challenge-post verified proofs; ○ for self-reported
+    const isVerified = p.verificationStatus === 'verified';
+    const statusMark = isVerified
+      ? '<span class="verified" title="Challenge verified">✓</span>'
+      : '<span class="self-reported" title="Self-reported">○</span>';
+    badge.innerHTML = `${icon} ${escapeHtml(p.username)}${statusMark}`;
     container.appendChild(badge);
   }
 }
@@ -507,8 +530,9 @@ clearBtn.addEventListener('click', () => {
 });
 
 copyAddrBtn.addEventListener('click', async () => {
-  if (!currentIdentity?.rddAddress) return;
-  if (await copyText(currentIdentity.rddAddress)) flashCopied(copyAddrBtn, 'Copy');
+  const addr = primaryRddAddress(currentIdentity);
+  if (!addr) return;
+  if (await copyText(addr)) flashCopied(copyAddrBtn, 'Copy');
 });
 
 copyHandleBtn.addEventListener('click', async () => {
@@ -548,8 +572,9 @@ customAmountInput.addEventListener('input', () => {
 });
 
 function getBip21Uri() {
-  if (!currentIdentity?.rddAddress) return null;
-  const base = `reddcoin:${currentIdentity.rddAddress}`;
+  const addr = primaryRddAddress(currentIdentity);
+  if (!addr) return null;
+  const base = `reddcoin:${addr}`;
   return selectedAmount ? `${base}?amount=${selectedAmount}` : base;
 }
 

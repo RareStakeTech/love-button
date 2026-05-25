@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "ReddID — Tip with RDD",
   "short_name": "ReddID Tip",
-  "version": "2.4.0",
-  "description": "Send Ɍ ReddCoin tips to creators on Twitter/X, Reddit, YouTube, Twitch, Instagram, TikTok, Bluesky, Mastodon, Rumble, TruthSocial, Odysee, Kick, and GitHub. Powered by ReddID Next.",
+  "version": "2.5.0",
+  "description": "Ɍ RDD tips for creators on X, Reddit, YouTube, Twitch, Instagram, TikTok, Bluesky, Mastodon, Rumble, GitHub & more. Via ReddID.",
 
   "icons": {
     "16":  "icons/icon16.png",
@@ -132,6 +132,12 @@
       "js": ["lib/reddid-platform-util.js", "content/kick.js"],
       "run_at": "document_idle",
       "all_frames": false
+    },
+    {
+      "matches": ["https://github.com/*"],
+      "js": ["lib/reddid-platform-util.js", "content/github.js"],
+      "run_at": "document_idle",
+      "all_frames": false
     }
   ],
 
@@ -163,7 +169,8 @@
     "https://rumble.com/*",
     "https://truthsocial.com/*",
     "https://odysee.com/*",
-    "https://kick.com/*"
+    "https://kick.com/*",
+    "https://github.com/*"
   ],
 
   "permissions": [

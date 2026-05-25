@@ -1,0 +1,14 @@
+{
+  "name": "reddid-love-button",
+  "version": "2.5.0",
+  "description": "ReddID Love Button — MV3 browser extension for RDD tips",
+  "private": true,
+  "scripts": {
+    "lint": "web-ext lint --source-dir .",
+    "build:chrome": "web-ext build --source-dir . --artifacts-dir .. --filename \"love-button-chrome-{version}.zip\"",
+    "build:firefox": "node build-firefox.js"
+  },
+  "devDependencies": {
+    "web-ext": "^8.3.0"
+  }
+}

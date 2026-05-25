@@ -138,6 +138,35 @@ async function lookupAddressInfo(address) {
   }
 }
 
+// ── Identity helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Extract the primary RDD address from a v1 or v2 identity object.
+ *
+ * v2 identities expose a `wallets[]` array; v1 used a bare `rddAddress` string.
+ * We try wallets[] first, then fall back to the legacy field so the extension
+ * works against both old and new API responses during the schema migration window.
+ *
+ * @param {Object|null} identity
+ * @returns {string|null}
+ */
+function primaryRddAddress(identity) {
+  if (!identity) return null;
+  // v2: wallets[] — prefer primary, fall back to any active RDD wallet
+  if (Array.isArray(identity.wallets)) {
+    const primary = identity.wallets.find(
+      w => w.chain === 'rdd' && w.primary && !w.revokedAt
+    );
+    if (primary) return primary.address;
+    const any = identity.wallets.find(
+      w => w.chain === 'rdd' && !w.revokedAt
+    );
+    if (any) return any.address;
+  }
+  // v1 fallback
+  return identity.rddAddress ?? null;
+}
+
 // ── Handle history ────────────────────────────────────────────────────────────
 
 async function getHistory() {
@@ -153,7 +182,7 @@ async function addToHistory(identity) {
   history.unshift({
     handle:      identity.handle,
     displayName: identity.displayName ?? null,
-    rddAddress:  identity.rddAddress,
+    rddAddress:  primaryRddAddress(identity),
     timestamp:   Date.now(),
   });
   if (history.length > HISTORY_MAX) history = history.slice(0, HISTORY_MAX);

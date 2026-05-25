@@ -1,0 +1,28 @@
+# Files excluded from web-ext lint and build artifacts
+# web-ext picks up everything not listed here, so be explicit about dev-only files.
+
+# Node / build tooling
+node_modules/
+package.json
+package-lock.json
+yarn.lock
+
+# Build artefacts
+*.zip
+love-button-firefox/
+
+# Icon source files (generated PNGs are included; SVG sources are not)
+icons/src/
+
+# Developer-only scripts
+gen-icons.js
+build-firefox.js
+
+# Documentation (not needed in the extension bundle)
+README.md
+PLUGINS.md
+TESTING.md
+CHANGELOG.md
+
+# Store assets
+store/
