@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "ReddID — Tip with RDD",
   "short_name": "ReddID Tip",
-  "version": "2.0.0",
-  "description": "Send ReddCoin (RDD) tips to creators on Twitter/X, Reddit, and YouTube. Powered by ReddID Next.",
+  "version": "2.1.0",
+  "description": "Send Ɍ ReddCoin tips to creators on Twitter/X, Reddit, YouTube, Twitch, and Instagram. Powered by ReddID Next.",
 
   "icons": {
     "16":  "icons/icon16.png",
@@ -25,12 +25,19 @@
     "type": "module"
   },
 
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+R",
+        "mac": "Alt+Shift+R"
+      },
+      "description": "Open ReddID Tip Button"
+    }
+  },
+
   "content_scripts": [
     {
-      "matches": [
-        "https://twitter.com/*",
-        "https://x.com/*"
-      ],
+      "matches": ["https://twitter.com/*", "https://x.com/*"],
       "js": ["content/twitter.js"],
       "run_at": "document_idle",
       "all_frames": false
@@ -56,6 +63,18 @@
       "js": ["content/youtube.js"],
       "run_at": "document_idle",
       "all_frames": false
+    },
+    {
+      "matches": ["https://www.twitch.tv/*"],
+      "js": ["content/twitch.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["https://www.instagram.com/*"],
+      "js": ["content/instagram.js"],
+      "run_at": "document_idle",
+      "all_frames": false
     }
   ],
 
@@ -64,12 +83,15 @@
     "https://x.com/*",
     "https://www.reddit.com/*",
     "https://reddit.com/*",
-    "https://www.youtube.com/*"
+    "https://www.youtube.com/*",
+    "https://www.twitch.tv/*",
+    "https://www.instagram.com/*"
   ],
 
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "contextMenus"
   ],
 
   "options_ui": {

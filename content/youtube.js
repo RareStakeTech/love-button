@@ -55,7 +55,7 @@
       display: 'inline-flex',
       alignItems: 'center',
       gap: '6px',
-      background: '#CC1111',
+      background: '#E30613',
       color: 'white',
       textDecoration: 'none',
       borderRadius: '20px',

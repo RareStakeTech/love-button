@@ -5,8 +5,8 @@
   <title>ReddID Love Button — Settings</title>
   <style>
     :root {
-      --red: #CC1111;
-      --red-dark: #991010;
+      --red: #E30613;
+      --red-dark: #B80510;
       --bg: #080808;
       --card: #111111;
       --border: #252525;
@@ -222,11 +222,31 @@
       <p class="hint">
         Default: <code>https://redd.love</code> — change only if you're running your own
         ReddID Next instance. The extension appends <code>/api/identities/{handle}</code>
-        to this URL for lookups.
+        to this URL for identity lookups.
+      </p>
+    </div>
+
+    <!-- Block explorer -->
+    <div class="card">
+      <div class="card-title">Block Explorer</div>
+      <label for="explorer-base">ReddCoin Insight-compatible explorer URL</label>
+      <input
+        type="url"
+        id="explorer-base"
+        placeholder="https://live.reddcoin.com"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <p class="hint">
+        Used to fetch live on-chain balance and transaction data in the popup.<br>
+        Default: <code>https://live.reddcoin.com</code><br>
+        Must be an <strong>Insight API</strong> compatible endpoint — the extension calls
+        <code>/api/addr/{address}</code>.<br>
+        Self-hosted options: <code>reddcore</code> insight explorer or any Bitcore Insight fork.
       </p>
       <div class="actions">
         <button class="btn-primary" id="save-btn">Save settings</button>
-        <button class="btn-ghost" id="reset-btn">Reset to default</button>
+        <button class="btn-ghost" id="reset-btn">Reset to defaults</button>
       </div>
       <div class="status" id="save-status"></div>
     </div>
@@ -257,7 +277,7 @@
       </div>
       <div class="info-row">
         <span class="info-label">Platforms supported</span>
-        <span class="info-value">Twitter/X, Reddit, YouTube</span>
+        <span class="info-value">Twitter/X, Reddit, YouTube, Twitch, Instagram</span>
       </div>
       <div class="info-row">
         <span class="info-label">Manifest version</span>

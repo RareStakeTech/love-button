@@ -1,19 +1,21 @@
 /**
- * ReddID Love Button v2 — Options / settings page
+ * ReddID Love Button v2.1 — Options / settings page
  */
 
-const DEFAULT_API_BASE = 'https://redd.love';
+const DEFAULT_API_BASE      = 'https://redd.love';
+const DEFAULT_EXPLORER_BASE = 'https://live.reddcoin.com';
 
-const apiInput    = document.getElementById('api-base');
-const saveBtn     = document.getElementById('save-btn');
-const resetBtn    = document.getElementById('reset-btn');
-const saveStatus  = document.getElementById('save-status');
+const apiInput      = document.getElementById('api-base');
+const explorerInput = document.getElementById('explorer-base');
+const saveBtn       = document.getElementById('save-btn');
+const resetBtn      = document.getElementById('reset-btn');
+const saveStatus    = document.getElementById('save-status');
 const clearCacheBtn = document.getElementById('clear-cache-btn');
-const cacheStatus = document.getElementById('cache-status');
-const cacheCount  = document.getElementById('cache-count');
-const extVersion  = document.getElementById('ext-version');
+const cacheStatus   = document.getElementById('cache-status');
+const cacheCount    = document.getElementById('cache-count');
+const extVersion    = document.getElementById('ext-version');
 
-// ── Status helpers ────────────────────────────────────────────────────────────
+// ── Status helper ─────────────────────────────────────────────────────────────
 
 function showStatus(el, type, msg, duration = 3000) {
   el.className = `status ${type}`;
@@ -21,64 +23,88 @@ function showStatus(el, type, msg, duration = 3000) {
   if (duration) setTimeout(() => { el.className = 'status'; el.textContent = ''; }, duration);
 }
 
+// ── URL validation ────────────────────────────────────────────────────────────
+
+function validateUrl(raw, fallback) {
+  const trimmed = (raw || '').trim().replace(/\/+$/, '') || fallback;
+  try {
+    const u = new URL(trimmed);
+    if (!['http:', 'https:'].includes(u.protocol)) throw new Error();
+    return { ok: true, value: trimmed };
+  } catch {
+    return { ok: false, value: null };
+  }
+}
+
 // ── Load stored settings ──────────────────────────────────────────────────────
 
 async function load() {
-  const { apiBase } = await chrome.storage.local.get('apiBase');
-  apiInput.value = apiBase || DEFAULT_API_BASE;
+  // apiBase is in sync storage; explorerBase in local
+  const [syncData, localData] = await Promise.all([
+    chrome.storage.sync.get(['apiBase']),
+    chrome.storage.local.get(['explorerBase']),
+  ]);
 
-  const manifest = chrome.runtime.getManifest();
-  extVersion.textContent = manifest.version;
+  apiInput.value      = syncData.apiBase      || DEFAULT_API_BASE;
+  explorerInput.value = localData.explorerBase || DEFAULT_EXPLORER_BASE;
 
+  extVersion.textContent = chrome.runtime.getManifest().version;
   refreshCacheCount();
 }
 
 async function refreshCacheCount() {
   const all = await chrome.storage.local.get(null);
-  // Cache entries are keyed 'cache_<handle>' or 'social_<platform>_<username>'
-  const count = Object.keys(all).filter(k => k.startsWith('cache_') || k.startsWith('social_')).length;
+  const count = Object.keys(all).filter(k =>
+    k.startsWith('handle:') || k.startsWith('social:') || k.startsWith('explorer:')
+  ).length;
   cacheCount.textContent = count === 0 ? 'empty' : `${count} entries`;
 }
 
 // ── Save ──────────────────────────────────────────────────────────────────────
 
 saveBtn.addEventListener('click', async () => {
-  const raw = apiInput.value.trim();
-  let base = raw || DEFAULT_API_BASE;
-
-  // Normalize: strip trailing slash
-  base = base.replace(/\/+$/, '');
-
-  // Basic URL validation
-  try {
-    const u = new URL(base);
-    if (!['http:', 'https:'].includes(u.protocol)) throw new Error('must be http/https');
-  } catch {
-    showStatus(saveStatus, 'error', 'Invalid URL — must start with https:// or http://');
+  const api = validateUrl(apiInput.value, DEFAULT_API_BASE);
+  if (!api.ok) {
+    showStatus(saveStatus, 'error', 'API URL invalid — must start with https:// or http://');
+    return;
+  }
+  const explorer = validateUrl(explorerInput.value, DEFAULT_EXPLORER_BASE);
+  if (!explorer.ok) {
+    showStatus(saveStatus, 'error', 'Explorer URL invalid — must start with https:// or http://');
     return;
   }
 
-  await chrome.storage.local.set({ apiBase: base });
-  apiInput.value = base;
+  apiInput.value      = api.value;
+  explorerInput.value = explorer.value;
 
-  // Notify background to drop cache so new base takes effect immediately
+  await Promise.all([
+    chrome.storage.sync.set({ apiBase: api.value }),
+    chrome.storage.local.set({ explorerBase: explorer.value }),
+  ]);
+
+  // Drop identity and explorer cache so new settings take effect immediately
   chrome.runtime.sendMessage({ type: 'CLEAR_CACHE' });
-
   showStatus(saveStatus, 'success', 'Settings saved.');
 });
 
 // ── Reset ─────────────────────────────────────────────────────────────────────
 
 resetBtn.addEventListener('click', async () => {
-  await chrome.storage.local.set({ apiBase: DEFAULT_API_BASE });
-  apiInput.value = DEFAULT_API_BASE;
+  apiInput.value      = DEFAULT_API_BASE;
+  explorerInput.value = DEFAULT_EXPLORER_BASE;
+
+  await Promise.all([
+    chrome.storage.sync.set({ apiBase: DEFAULT_API_BASE }),
+    chrome.storage.local.set({ explorerBase: DEFAULT_EXPLORER_BASE }),
+  ]);
+
   chrome.runtime.sendMessage({ type: 'CLEAR_CACHE' });
-  showStatus(saveStatus, 'success', 'Reset to default.');
+  showStatus(saveStatus, 'success', 'Reset to defaults.');
 });
 
 // ── Clear cache ───────────────────────────────────────────────────────────────
 
-clearCacheBtn.addEventListener('click', async () => {
+clearCacheBtn.addEventListener('click', () => {
   chrome.runtime.sendMessage({ type: 'CLEAR_CACHE' }, async () => {
     await refreshCacheCount();
     showStatus(cacheStatus, 'success', 'Cache cleared.');

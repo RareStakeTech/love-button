@@ -1,108 +1,206 @@
 /**
- * ReddID Love Button v2 — Service Worker (Manifest V3)
+ * ReddID Love Button v2.1 — Service Worker (Manifest V3)
  *
  * Handles:
- * - ReddID Next API calls (cached)
- * - Message passing from content scripts
- * - Storage of user settings and cache
+ * - ReddID Next API lookups (5-min cache)
+ * - Block explorer balance/tx queries (2-min cache)
+ * - Context menu right-click lookup
+ * - Handle history (last 10 looked-up handles)
+ * - Message routing from popup and content scripts
  */
 
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS      = 5 * 60 * 1000; // 5 min — identity lookups
+const EXPLORER_TTL_MS   = 2 * 60 * 1000; // 2 min — on-chain data
+const HISTORY_MAX       = 10;
 
-// ── Settings ────────────────────────────────────────────────────────────────
+// ── Settings ─────────────────────────────────────────────────────────────────
 
 async function getApiBase() {
-  const result = await chrome.storage.sync.get(['apiBase']);
-  return result.apiBase || 'https://redd.love';
+  const { apiBase } = await chrome.storage.sync.get(['apiBase']);
+  return apiBase || 'https://redd.love';
 }
 
-// ── Cache helpers ────────────────────────────────────────────────────────────
+async function getExplorerBase() {
+  const { explorerBase } = await chrome.storage.local.get(['explorerBase']);
+  // Default: Reddcoin Insight-compatible explorer.
+  // Configurable in Options so users can point at a self-hosted node.
+  return explorerBase || 'https://live.reddcoin.com';
+}
 
-async function getCached(key) {
+// ── Generic cache ─────────────────────────────────────────────────────────────
+
+async function getCached(key, ttl = CACHE_TTL_MS) {
   const result = await chrome.storage.local.get([key]);
   const entry = result[key];
-  if (!entry) return null;
-  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+  if (!entry) return undefined; // undefined = miss; null = cached-negative
+  if (Date.now() - entry.timestamp > ttl) {
     await chrome.storage.local.remove([key]);
-    return null;
+    return undefined;
   }
   return entry.data;
 }
 
 async function setCache(key, data) {
-  await chrome.storage.local.set({
-    [key]: { data, timestamp: Date.now() },
-  });
+  await chrome.storage.local.set({ [key]: { data, timestamp: Date.now() } });
 }
 
-// ── ReddID API ───────────────────────────────────────────────────────────────
+// ── ReddID API ────────────────────────────────────────────────────────────────
 
-/**
- * Look up a ReddID handle. Returns identity object or null.
- */
 async function lookupHandle(handle) {
-  const cacheKey = `handle:${handle.toLowerCase()}`;
-  const cached = await getCached(cacheKey);
-  if (cached !== null) return cached;
+  const key = `handle:${handle.toLowerCase()}`;
+  const cached = await getCached(key);
+  if (cached !== undefined) return cached;
 
   try {
     const apiBase = await getApiBase();
     const res = await fetch(`${apiBase}/api/identities/${encodeURIComponent(handle)}`);
-    if (!res.ok) {
-      await setCache(cacheKey, null); // cache negative result too
-      return null;
-    }
-    const data = await res.json();
-    const identity = data.identity ?? null;
-    await setCache(cacheKey, identity);
+    const identity = res.ok ? ((await res.json()).identity ?? null) : null;
+    await setCache(key, identity);
     return identity;
   } catch {
     return null;
   }
 }
 
-/**
- * Look up a ReddID handle by social proof (platform + username).
- * Calls the social-proof lookup endpoint (available in v0.2+).
- */
 async function lookupBySocialProof(platform, username) {
-  const cacheKey = `social:${platform}:${username.toLowerCase()}`;
-  const cached = await getCached(cacheKey);
-  if (cached !== null) return cached;
+  const key = `social:${platform}:${username.toLowerCase()}`;
+  const cached = await getCached(key);
+  if (cached !== undefined) return cached;
 
   try {
     const apiBase = await getApiBase();
     const params = new URLSearchParams({ platform, username });
     const res = await fetch(`${apiBase}/api/identities/by-social?${params}`);
-    if (!res.ok) {
-      await setCache(cacheKey, null);
-      return null;
-    }
-    const data = await res.json();
-    const identity = data.identity ?? null;
-    await setCache(cacheKey, identity);
+    const identity = res.ok ? ((await res.json()).identity ?? null) : null;
+    await setCache(key, identity);
     return identity;
   } catch {
     return null;
   }
 }
 
-// ── Message handler ──────────────────────────────────────────────────────────
+// ── Block explorer ────────────────────────────────────────────────────────────
+
+/**
+ * Fetch on-chain address info from an Insight-compatible API.
+ * Returns { balance, totalReceived, txCount } or null on failure.
+ *
+ * Insight API endpoint: GET /api/addr/{address}
+ * Compatible with: reddcore insight, bitcore insight, blockbook (partial)
+ */
+async function lookupAddressInfo(address) {
+  const key = `explorer:${address}`;
+  const cached = await getCached(key, EXPLORER_TTL_MS);
+  if (cached !== undefined) return cached;
+
+  try {
+    const explorerBase = await getExplorerBase();
+    if (!explorerBase) { await setCache(key, null); return null; }
+
+    const res = await fetch(`${explorerBase}/api/addr/${encodeURIComponent(address)}`, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) { await setCache(key, null); return null; }
+
+    const d = await res.json();
+    const info = {
+      balance:       d.balance       ?? 0,
+      totalReceived: d.totalReceived ?? 0,
+      totalSent:     d.totalSent     ?? 0,
+      txCount:       d.txApperances  ?? 0, // insight typo is intentional
+      unconfirmed:   d.unconfirmedBalance ?? 0,
+    };
+    await setCache(key, info);
+    return info;
+  } catch {
+    await setCache(key, null);
+    return null;
+  }
+}
+
+// ── Handle history ────────────────────────────────────────────────────────────
+
+async function getHistory() {
+  const { lookupHistory } = await chrome.storage.local.get(['lookupHistory']);
+  return lookupHistory || [];
+}
+
+async function addToHistory(identity) {
+  if (!identity?.handle) return;
+  let history = await getHistory();
+  // Remove any existing entry for this handle, then prepend
+  history = history.filter(h => h.handle !== identity.handle);
+  history.unshift({
+    handle:      identity.handle,
+    displayName: identity.displayName ?? null,
+    rddAddress:  identity.rddAddress,
+    timestamp:   Date.now(),
+  });
+  if (history.length > HISTORY_MAX) history = history.slice(0, HISTORY_MAX);
+  await chrome.storage.local.set({ lookupHistory: history });
+}
+
+// ── Context menu ──────────────────────────────────────────────────────────────
+
+function setupContextMenu() {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id:        'reddid-lookup',
+      title:     'Look up ReddID: "%s"',
+      contexts:  ['selection'],
+    });
+  });
+}
+
+chrome.runtime.onInstalled.addListener(setupContextMenu);
+chrome.runtime.onStartup.addListener(setupContextMenu);
+
+chrome.contextMenus.onClicked.addListener(async (info) => {
+  if (info.menuItemId !== 'reddid-lookup') return;
+
+  // Clean the selected text into a handle candidate
+  const raw = (info.selectionText || '').trim().replace(/^@/, '').toLowerCase();
+  if (!raw || !/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(raw)) return;
+
+  const identity = await lookupHandle(raw);
+
+  if (identity) {
+    // Found — store as pending result so popup can display it immediately
+    await chrome.storage.local.set({ pendingQuery: raw, pendingResult: identity });
+    await addToHistory(identity);
+  } else {
+    // Not found — store query so popup can show "not found" gracefully
+    await chrome.storage.local.set({ pendingQuery: raw, pendingResult: null });
+  }
+
+  // Open the popup (requires Chrome 127+; gracefully fails on older versions)
+  try {
+    await chrome.action.openPopup();
+  } catch {
+    // Fallback: open the tip page search in a new tab
+    const apiBase = await getApiBase();
+    chrome.tabs.create({ url: `${apiBase}/register` });
+  }
+});
+
+// ── Message handler ───────────────────────────────────────────────────────────
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   const { type, payload } = message;
 
   if (type === 'LOOKUP_HANDLE') {
-    lookupHandle(payload.handle).then(identity => {
-      sendResponse({ identity });
-    });
-    return true; // keeps the message channel open for async response
+    lookupHandle(payload.handle).then(identity => sendResponse({ identity }));
+    return true;
   }
 
   if (type === 'LOOKUP_SOCIAL') {
-    lookupBySocialProof(payload.platform, payload.username).then(identity => {
-      sendResponse({ identity });
-    });
+    lookupBySocialProof(payload.platform, payload.username)
+      .then(identity => sendResponse({ identity }));
+    return true;
+  }
+
+  if (type === 'LOOKUP_ADDRESS_INFO') {
+    lookupAddressInfo(payload.address).then(info => sendResponse({ info }));
     return true;
   }
 
@@ -111,8 +209,36 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
+  if (type === 'GET_EXPLORER_BASE') {
+    getExplorerBase().then(base => sendResponse({ base }));
+    return true;
+  }
+
+  if (type === 'GET_HISTORY') {
+    getHistory().then(history => sendResponse({ history }));
+    return true;
+  }
+
+  if (type === 'ADD_TO_HISTORY') {
+    addToHistory(payload.identity).then(() => sendResponse({ ok: true }));
+    return true;
+  }
+
   if (type === 'CLEAR_CACHE') {
-    chrome.storage.local.clear().then(() => sendResponse({ ok: true }));
+    // Clear cache keys but preserve settings and history
+    chrome.storage.local.get(null, items => {
+      const cacheKeys = Object.keys(items).filter(k =>
+        k.startsWith('handle:') || k.startsWith('social:') || k.startsWith('explorer:')
+      );
+      if (cacheKeys.length) chrome.storage.local.remove(cacheKeys);
+      sendResponse({ ok: true });
+    });
+    return true;
+  }
+
+  if (type === 'CLEAR_PENDING') {
+    chrome.storage.local.remove(['pendingQuery', 'pendingResult'])
+      .then(() => sendResponse({ ok: true }));
     return true;
   }
 });
