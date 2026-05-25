@@ -301,6 +301,57 @@
     .action-btn-ghost:hover  { border-color: var(--muted); color: var(--text); }
     .action-btn-ghost.copied { background: var(--green-bg); border-color: var(--green-bd); color: var(--green); }
 
+    /* ── Tip amount picker ── */
+    .tip-amount-section {
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--card2);
+    }
+    .tip-amount-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .tip-chips {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .chip:hover { border-color: var(--muted); color: var(--text); }
+    .chip.selected {
+      background: var(--red-pale);
+      border-color: var(--red-border);
+      color: var(--red);
+    }
+    #custom-amount-row { margin-top: 6px; display: none; }
+    #custom-amount-input {
+      width: 100%;
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text);
+      font-size: 12px;
+      padding: 5px 10px;
+      outline: none;
+      caret-color: var(--red);
+      box-sizing: border-box;
+    }
+    #custom-amount-input:focus { border-color: var(--red); }
+
     /* ── BIP21 row ── */
     .bip21-row {
       padding: 8px 14px 10px;
@@ -466,6 +517,21 @@
           </a>
           <button class="action-btn-ghost" id="copy-handle-btn">@ Copy</button>
           <button class="action-btn-ghost" id="clear-btn">Clear</button>
+        </div>
+
+        <!-- Tip amount picker -->
+        <div class="tip-amount-section">
+          <div class="tip-amount-label">Tip amount (Ɍ)</div>
+          <div class="tip-chips" id="tip-chips">
+            <button class="chip" data-amount="100">100</button>
+            <button class="chip" data-amount="500">500</button>
+            <button class="chip" data-amount="1000">1K</button>
+            <button class="chip" data-amount="5000">5K</button>
+            <button class="chip" data-amount="custom">Custom</button>
+          </div>
+          <div id="custom-amount-row">
+            <input type="number" id="custom-amount-input" placeholder="Amount in RDD" min="1" max="100000000" />
+          </div>
         </div>
 
         <!-- BIP21 row -->

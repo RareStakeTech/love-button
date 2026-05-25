@@ -21,9 +21,12 @@ const addrTypeBadge  = $('addr-type-badge');
 const openTipPage    = $('open-tip-page');
 const copyHandleBtn  = $('copy-handle-btn');
 const clearBtn       = $('clear-btn');
-const copyAddrBtn    = $('copy-addr-btn');
-const openWalletBtn  = $('open-wallet-btn');
-const copyBip21Btn   = $('copy-bip21-btn');
+const copyAddrBtn      = $('copy-addr-btn');
+const openWalletBtn    = $('open-wallet-btn');
+const copyBip21Btn     = $('copy-bip21-btn');
+const tipChips         = $('tip-chips');
+const customAmountRow  = $('custom-amount-row');
+const customAmountInput = $('custom-amount-input');
 const balanceLoading = $('balance-loading');
 const balanceData    = $('balance-data');
 const balanceError   = $('balance-error');
@@ -37,8 +40,9 @@ const optionsLink    = $('options-link');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-let currentIdentity = null;
-let currentApiBase  = 'https://redd.love';
+let currentIdentity  = null;
+let currentApiBase   = 'https://redd.love';
+let selectedAmount   = null; // number | null
 
 function showState(state) {
   for (const s of ['idle', 'loading', 'error', 'result']) {
@@ -127,6 +131,7 @@ function flashCopied(btn, originalText) {
 
 async function showResult(identity) {
   currentIdentity = identity;
+  resetAmountChips();
 
   resultHandle.textContent = `@${identity.handle}`;
   resultName.textContent   = identity.displayName || identity.handle;
@@ -218,6 +223,10 @@ function detectPlatform(url) {
     const segs = p.split('/').filter(Boolean);
     if (segs.length >= 1 && !RESERVED.has(segs[0].toLowerCase()))
       return { platform: 'instagram', username: segs[0] };
+  }
+  if (h === 'tiktok.com') {
+    const m = p.match(/^\/@([a-zA-Z0-9_.]{1,24})\/?$/);
+    if (m && !RESERVED.has(m[1].toLowerCase())) return { platform: 'tiktok', username: m[1] };
   }
   return null;
 }
@@ -315,6 +324,7 @@ clearBtn.addEventListener('click', () => {
   currentIdentity = null;
   searchInput.value = '';
   detectedBanner.style.display = 'none';
+  resetAmountChips();
   showState('idle');
 });
 
@@ -328,14 +338,55 @@ copyHandleBtn.addEventListener('click', async () => {
   if (await copyText(`@${currentIdentity.handle}`)) flashCopied(copyHandleBtn, '@ Copy');
 });
 
+// ── Tip amount chips ──────────────────────────────────────────────────────────
+
+function resetAmountChips() {
+  if (!tipChips) return;
+  tipChips.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  customAmountRow.style.display = 'none';
+  customAmountInput.value = '';
+  selectedAmount = null;
+}
+
+tipChips.addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  tipChips.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  chip.classList.add('selected');
+  if (chip.dataset.amount === 'custom') {
+    customAmountRow.style.display = '';
+    customAmountInput.focus();
+    const v = parseInt(customAmountInput.value, 10);
+    selectedAmount = (!isNaN(v) && v > 0) ? v : null;
+  } else {
+    customAmountRow.style.display = 'none';
+    selectedAmount = parseInt(chip.dataset.amount, 10);
+  }
+});
+
+customAmountInput.addEventListener('input', () => {
+  const v = parseInt(customAmountInput.value, 10);
+  selectedAmount = (!isNaN(v) && v > 0) ? v : null;
+});
+
+function getBip21Uri() {
+  if (!currentIdentity?.rddAddress) return null;
+  const base = `reddcoin:${currentIdentity.rddAddress}`;
+  return selectedAmount ? `${base}?amount=${selectedAmount}` : base;
+}
+
+// ── BIP21 handlers ────────────────────────────────────────────────────────────
+
 openWalletBtn.addEventListener('click', () => {
-  if (!currentIdentity?.rddAddress) return;
-  window.open(`reddcoin:${currentIdentity.rddAddress}`, '_blank', 'noopener,noreferrer');
+  const uri = getBip21Uri();
+  if (!uri) return;
+  window.open(uri, '_blank', 'noopener,noreferrer');
 });
 
 copyBip21Btn.addEventListener('click', async () => {
-  if (!currentIdentity?.rddAddress) return;
-  if (await copyText(`reddcoin:${currentIdentity.rddAddress}`)) flashCopied(copyBip21Btn, 'Copy Ɍ URI');
+  const uri = getBip21Uri();
+  if (!uri) return;
+  if (await copyText(uri)) flashCopied(copyBip21Btn, 'Copy Ɍ URI');
 });
 
 optionsLink.addEventListener('click', e => {

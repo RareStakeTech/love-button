@@ -5,6 +5,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.2.0] — 2026-05-25
+
+### Added
+- **TikTok support** — `content/tiktok.js` detects `tiktok.com/@username` profile pages;
+  multi-strategy insertion (`data-e2e` selectors + Follow button fallback); floating fallback
+  button at `top:72px right:16px` when native point unavailable; MutationObserver +
+  `setInterval(600ms)` + `popstate` for SPA navigation
+- **Firefox compatibility** — `browser_specific_settings.gecko` block in `manifest.json`
+  (id: `reddid-tipbutton@rarestaketech.com`, min: 109.0); removed `"type":"module"` from
+  background entry (Firefox MV3 doesn't require it for plain scripts)
+- **`build-firefox.js`** — Node.js script that generates `manifest.firefox.json` with
+  Firefox-specific patches; prints step-by-step testing and AMO submission instructions
+- **Tip amount pre-selection** — Popup now includes 100 / 500 / 1K / 5K / custom Ɍ chip
+  selector above the BIP21 buttons; selected amount is appended as `?amount=X` to the
+  `reddcoin:` URI for both "Open in wallet" and "Copy Ɍ URI" flows; resets on clear/new result
+- **GitHub Actions CI** (`.github/workflows/ci.yml`) — four jobs: manifest validation,
+  file existence check (content scripts + icons), ESLint, Firefox manifest generation + validation
+- **Store assets** (`store/listing.md`, `store/screenshots.md`) — full Chrome Web Store
+  listing copy (description, permissions justification, privacy policy), screenshot guide
+  with 5 scenes and promotional tile spec
+
+### Changed
+- `manifest.json` version bumped to `2.2.0`
+- `popup.js`: TikTok added to tab detection (`detectPlatform()`); `selectedAmount` state
+  tracks chosen tip amount; `getBip21Uri()` appends amount param when set
+
+---
+
 ## [2.1.1] — 2026-05-25
 
 ### Changed
