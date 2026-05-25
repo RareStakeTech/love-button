@@ -389,6 +389,75 @@
     .history-handle { font-size: 11px; font-weight: 600; color: var(--red); }
     .history-name   { font-size: 10px; color: var(--muted); }
 
+    /* ── Tabs ── */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--card2);
+    }
+    .tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 7px 0;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: all 0.12s;
+    }
+    .tab-btn.active {
+      color: var(--red);
+      border-bottom-color: var(--red);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Social proofs ── */
+    .social-proofs {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .social-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .social-badge .verified {
+      color: var(--green);
+      font-size: 9px;
+    }
+
+    /* ── Transactions tab ── */
+    .txn-list {
+      padding: 4px 0;
+    }
+    .txn-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 14px;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+    }
+    .txn-item:last-child { border-bottom: none; }
+    .txn-amount { font-size: 12px; font-weight: 700; color: var(--green); }
+    .txn-time   { font-size: 9px; color: var(--dim); }
+    .txn-id     { font-size: 9px; color: var(--dim); font-family: monospace; }
+    .txn-empty  { padding: 16px 14px; font-size: 11px; color: var(--dim); text-align: center; }
+    .txn-loading { padding: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; color: var(--muted); }
+
     /* ── Footer ── */
     .footer {
       padding: 7px 14px;
@@ -409,7 +478,7 @@
       <span class="brand-badge">REDD</span>
       <span class="brand-name">ID Tip Button</span>
     </div>
-    <span class="version">v2.1</span>
+    <span class="version">v2.3</span>
   </div>
 
   <!-- Detected banner (auto-hidden if auto-lookup fires) -->
@@ -472,77 +541,100 @@
           <div class="result-bio"    id="result-bio" style="display:none"></div>
         </div>
 
-        <!-- Address -->
-        <div class="result-address-section">
-          <div class="address-label">
-            Ɍ RDD Address
-            <span class="addr-type-badge" id="addr-type-badge" style="display:none"></span>
-          </div>
-          <div class="address-row">
-            <div class="address-text" id="result-address"></div>
-            <button class="action-btn-ghost" id="copy-addr-btn" style="flex:none;padding:4px 8px;font-size:10px">Copy</button>
-          </div>
+        <!-- Social proofs (shown when present) -->
+        <div class="social-proofs" id="social-proofs" style="display:none"></div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="profile">Profile</button>
+          <button class="tab-btn" data-tab="txns">Transactions</button>
         </div>
 
-        <!-- Balance (async) -->
-        <div class="balance-section" id="balance-section">
-          <div class="balance-label">On-chain data</div>
-          <div class="balance-loading" id="balance-loading">
+        <!-- Profile tab -->
+        <div class="tab-panel active" id="tab-profile">
+
+          <!-- Address -->
+          <div class="result-address-section">
+            <div class="address-label">
+              Ɍ RDD Address
+              <span class="addr-type-badge" id="addr-type-badge" style="display:none"></span>
+            </div>
+            <div class="address-row">
+              <div class="address-text" id="result-address"></div>
+              <button class="action-btn-ghost" id="copy-addr-btn" style="flex:none;padding:4px 8px;font-size:10px">Copy</button>
+            </div>
+          </div>
+
+          <!-- Balance (async) -->
+          <div class="balance-section" id="balance-section">
+            <div class="balance-label">On-chain data</div>
+            <div class="balance-loading" id="balance-loading">
+              <div class="spinner" style="width:10px;height:10px;border-width:1.5px"></div>
+              Fetching from explorer…
+            </div>
+            <div class="balance-row" id="balance-data" style="display:none">
+              <div class="balance-stat">
+                <span class="balance-val" id="bal-balance"></span>
+                <span class="balance-key">balance</span>
+              </div>
+              <div class="balance-stat">
+                <span class="balance-val" id="bal-received"></span>
+                <span class="balance-key">total received</span>
+              </div>
+              <div class="balance-stat">
+                <span class="balance-val" id="bal-txcount"></span>
+                <span class="balance-key">txns</span>
+              </div>
+            </div>
+            <div class="balance-error" id="balance-error" style="display:none">
+              Explorer not configured or unavailable — set URL in Settings
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="result-actions">
+            <a class="action-btn" id="open-tip-page" href="#" target="_blank" rel="noopener">
+              Open tip page →
+            </a>
+            <button class="action-btn-ghost" id="copy-handle-btn">@ Copy</button>
+            <button class="action-btn-ghost" id="clear-btn">Clear</button>
+          </div>
+
+          <!-- Tip amount picker -->
+          <div class="tip-amount-section">
+            <div class="tip-amount-label">Tip amount (Ɍ)</div>
+            <div class="tip-chips" id="tip-chips">
+              <button class="chip" data-amount="100">100</button>
+              <button class="chip" data-amount="500">500</button>
+              <button class="chip" data-amount="1000">1K</button>
+              <button class="chip" data-amount="5000">5K</button>
+              <button class="chip" data-amount="custom">Custom</button>
+            </div>
+            <div id="custom-amount-row">
+              <input type="number" id="custom-amount-input" placeholder="Amount in RDD" min="1" max="100000000" />
+            </div>
+          </div>
+
+          <!-- BIP21 row -->
+          <div class="bip21-row">
+            <button class="action-btn-ghost" id="open-wallet-btn" style="flex:1;font-size:10px">
+              💳 Open in wallet
+            </button>
+            <button class="action-btn-ghost" id="copy-bip21-btn" style="flex:1;font-size:10px">
+              Copy Ɍ URI
+            </button>
+          </div>
+
+        </div><!-- /tab-profile -->
+
+        <!-- Txns tab -->
+        <div class="tab-panel" id="tab-txns">
+          <div class="txn-loading" id="txn-loading">
             <div class="spinner" style="width:10px;height:10px;border-width:1.5px"></div>
-            Fetching from explorer…
+            Loading transactions…
           </div>
-          <div class="balance-row" id="balance-data" style="display:none">
-            <div class="balance-stat">
-              <span class="balance-val" id="bal-balance"></span>
-              <span class="balance-key">balance</span>
-            </div>
-            <div class="balance-stat">
-              <span class="balance-val" id="bal-received"></span>
-              <span class="balance-key">total received</span>
-            </div>
-            <div class="balance-stat">
-              <span class="balance-val" id="bal-txcount"></span>
-              <span class="balance-key">txns</span>
-            </div>
-          </div>
-          <div class="balance-error" id="balance-error" style="display:none">
-            Explorer not configured or unavailable — set URL in Settings
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="result-actions">
-          <a class="action-btn" id="open-tip-page" href="#" target="_blank" rel="noopener">
-            Open tip page →
-          </a>
-          <button class="action-btn-ghost" id="copy-handle-btn">@ Copy</button>
-          <button class="action-btn-ghost" id="clear-btn">Clear</button>
-        </div>
-
-        <!-- Tip amount picker -->
-        <div class="tip-amount-section">
-          <div class="tip-amount-label">Tip amount (Ɍ)</div>
-          <div class="tip-chips" id="tip-chips">
-            <button class="chip" data-amount="100">100</button>
-            <button class="chip" data-amount="500">500</button>
-            <button class="chip" data-amount="1000">1K</button>
-            <button class="chip" data-amount="5000">5K</button>
-            <button class="chip" data-amount="custom">Custom</button>
-          </div>
-          <div id="custom-amount-row">
-            <input type="number" id="custom-amount-input" placeholder="Amount in RDD" min="1" max="100000000" />
-          </div>
-        </div>
-
-        <!-- BIP21 row -->
-        <div class="bip21-row">
-          <button class="action-btn-ghost" id="open-wallet-btn" style="flex:1;font-size:10px">
-            💳 Open in wallet
-          </button>
-          <button class="action-btn-ghost" id="copy-bip21-btn" style="flex:1;font-size:10px">
-            Copy Ɍ URI
-          </button>
-        </div>
+          <div class="txn-list" id="txn-list" style="display:none"></div>
+        </div><!-- /tab-txns -->
 
       </div>
     </div>

@@ -131,10 +131,13 @@ function flashCopied(btn, originalText) {
 
 async function showResult(identity) {
   currentIdentity = identity;
+  txnsLoaded = false;
   resetAmountChips();
+  resetTabs();
 
   resultHandle.textContent = `@${identity.handle}`;
   resultName.textContent   = identity.displayName || identity.handle;
+  renderSocialProofs(identity);
 
   if (identity.bio) {
     resultBio.textContent   = identity.bio;
@@ -270,6 +273,128 @@ async function checkCurrentTab() {
   }
 }
 
+// ── Tab switching ─────────────────────────────────────────────────────────────
+
+const tabBtns   = document.querySelectorAll('.tab-btn');
+const tabPanels = document.querySelectorAll('.tab-panel');
+
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === target));
+    tabPanels.forEach(p => p.classList.toggle('active', p.id === `tab-${target}`));
+    if (target === 'txns' && currentIdentity?.rddAddress) {
+      loadTxns(currentIdentity.rddAddress);
+    }
+  });
+});
+
+function resetTabs() {
+  tabBtns.forEach((b, i) => b.classList.toggle('active', i === 0));
+  tabPanels.forEach((p, i) => p.classList.toggle('active', i === 0));
+}
+
+// ── Social proof badges ───────────────────────────────────────────────────────
+
+const PLAT_ICONS = {
+  twitter: '𝕏', youtube: '▶', reddit: '●', twitch: '⬟',
+  instagram: '◈', tiktok: '♪', github: '⌥',
+};
+
+function renderSocialProofs(identity) {
+  const container = $('social-proofs');
+  if (!container) return;
+  const proofs = identity?.socialProofs ?? [];
+  if (!proofs.length) { container.style.display = 'none'; return; }
+
+  container.style.display = 'flex';
+  container.innerHTML = '';
+  for (const p of proofs) {
+    const badge = document.createElement('span');
+    badge.className = 'social-badge';
+    const icon = PLAT_ICONS[p.platform] ?? '🔗';
+    const verified = p.proofUrl ? '<span class="verified" title="Verified">✓</span>' : '';
+    badge.innerHTML = `${icon} ${escapeHtml(p.username)}${verified}`;
+    container.appendChild(badge);
+  }
+}
+
+// ── Transaction history (Blockbook) ──────────────────────────────────────────
+
+const SAT_DIVISOR = 1e8;
+let txnsLoaded = false;
+
+function satToRdd(s) {
+  return (parseInt(s || '0', 10) / SAT_DIVISOR);
+}
+
+function relTimeShort(unix) {
+  const d = Math.floor(Date.now() / 1000) - unix;
+  if (d < 60)   return `${d}s ago`;
+  if (d < 3600) return `${Math.floor(d / 60)}m ago`;
+  if (d < 86400) return `${Math.floor(d / 3600)}h ago`;
+  return `${Math.floor(d / 86400)}d ago`;
+}
+
+async function loadTxns(address) {
+  const txnLoading = $('txn-loading');
+  const txnList    = $('txn-list');
+  if (!txnLoading || !txnList) return;
+
+  // Don't re-fetch within the same result session
+  if (txnsLoaded) return;
+
+  txnLoading.style.display = 'flex';
+  txnList.style.display    = 'none';
+  txnList.innerHTML        = '';
+
+  try {
+    const { explorerBase } = await chrome.storage.local.get({ explorerBase: 'https://blockbook.reddcoin.com' });
+    const url = `${explorerBase}/api/v2/address/${encodeURIComponent(address)}?details=txs&pageSize=10`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+
+    const txs = (data.transactions ?? []).filter(tx => {
+      const tot = (tx.vout ?? [])
+        .filter(o => (o.addresses ?? []).includes(address))
+        .reduce((s, o) => s + satToRdd(o.value), 0);
+      return tot > 0;
+    }).slice(0, 8);
+
+    if (!txs.length) {
+      txnList.innerHTML = '<div class="txn-empty">No incoming tips on-chain yet.</div>';
+    } else {
+      for (const tx of txs) {
+        const amount = (tx.vout ?? [])
+          .filter(o => (o.addresses ?? []).includes(address))
+          .reduce((s, o) => s + satToRdd(o.value), 0);
+        const time = tx.blockTime ? relTimeShort(tx.blockTime) : '⏳ unconfirmed';
+        const a = document.createElement('a');
+        a.className = 'txn-item';
+        a.href = `https://blockbook.reddcoin.com/tx/${tx.txid}`;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.innerHTML = `
+          <div>
+            <div class="txn-amount">+${amount.toLocaleString('en-US', { maximumFractionDigits: 4 })} Ɍ</div>
+            <div class="txn-time">${time}</div>
+          </div>
+          <div class="txn-id">${tx.txid.slice(0, 8)}…</div>
+        `;
+        txnList.appendChild(a);
+      }
+    }
+
+    txnsLoaded = true;
+  } catch {
+    txnList.innerHTML = '<div class="txn-empty">Could not load transactions.<br>Check your block explorer setting.</div>';
+  }
+
+  txnLoading.style.display = 'none';
+  txnList.style.display    = '';
+}
+
 // ── History ───────────────────────────────────────────────────────────────────
 
 function escapeHtml(s) {
@@ -322,9 +447,11 @@ searchInput.addEventListener('input', () => {
 
 clearBtn.addEventListener('click', () => {
   currentIdentity = null;
+  txnsLoaded = false;
   searchInput.value = '';
   detectedBanner.style.display = 'none';
   resetAmountChips();
+  resetTabs();
   showState('idle');
 });
 

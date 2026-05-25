@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.3.0] — 2026-05-25
+
+### Added
+- **Transactions tab** — second tab ("Transactions") in result card fetches `Blockbook v2 /api/v2/address/{addr}?details=txs&pageSize=10`; filters to incoming vouts only; renders up to 8 entries with amount, relative timestamp, and truncated txid linking to Blockbook; lazy-loads only when tab is clicked; does not re-fetch within the same result session
+- **Social proof badges** — `social-proofs` section above tab bar renders a chip for each linked platform with icon + username; verified proofs (those with `proofUrl` set) display a green `✓` checkmark badge
+
+### Changed
+- `manifest.json` version bumped to `2.3.0`
+- `popup.html` — added `tab-bar` (Profile | Transactions), `tab-panel` wrappers, `social-proofs` container, `txn-list`/`txn-loading` elements; new CSS for `.tab-btn`, `.tab-panel`, `.social-badge`, `.txn-item`, `.txn-loading`, `.txn-empty`
+- `popup.js` — added `renderSocialProofs()`, `loadTxns()`, `resetTabs()`; tab-switching logic wires `.tab-btn` click to panel visibility + lazy transaction fetch; `txnsLoaded` guard prevents duplicate fetches; `showResult()` and `clearBtn` handler updated to call new helpers; version label updated to v2.3
+
+---
+
 ## [2.2.0] — 2026-05-25
 
 ### Added

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ReddID — Tip with RDD",
   "short_name": "ReddID Tip",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Send Ɍ ReddCoin tips to creators on Twitter/X, Reddit, YouTube, Twitch, Instagram, and TikTok. Powered by ReddID Next.",
 
   "icons": {
