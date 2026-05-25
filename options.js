@@ -3,7 +3,7 @@
  */
 
 const DEFAULT_API_BASE      = 'https://redd.love';
-const DEFAULT_EXPLORER_BASE = 'https://live.reddcoin.com';
+const DEFAULT_EXPLORER_BASE = 'https://blockbook.reddcoin.com';
 
 const apiInput      = document.getElementById('api-base');
 const explorerInput = document.getElementById('explorer-base');

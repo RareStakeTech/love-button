@@ -233,16 +233,15 @@
       <input
         type="url"
         id="explorer-base"
-        placeholder="https://live.reddcoin.com"
+        placeholder="https://blockbook.reddcoin.com"
         autocomplete="off"
         spellcheck="false"
       />
       <p class="hint">
         Used to fetch live on-chain balance and transaction data in the popup.<br>
-        Default: <code>https://live.reddcoin.com</code><br>
-        Must be an <strong>Insight API</strong> compatible endpoint — the extension calls
-        <code>/api/addr/{address}</code>.<br>
-        Self-hosted options: <code>reddcore</code> insight explorer or any Bitcore Insight fork.
+        Default: <code>https://blockbook.reddcoin.com</code> (Blockbook v2 API)<br>
+        Also supports self-hosted <strong>Insight API</strong> nodes (reddcore/bitcore) —
+        the extension tries Blockbook format first, then falls back to Insight.
       </p>
       <div class="actions">
         <button class="btn-primary" id="save-btn">Save settings</button>

@@ -22,9 +22,7 @@ async function getApiBase() {
 
 async function getExplorerBase() {
   const { explorerBase } = await chrome.storage.local.get(['explorerBase']);
-  // Default: Reddcoin Insight-compatible explorer.
-  // Configurable in Options so users can point at a self-hosted node.
-  return explorerBase || 'https://live.reddcoin.com';
+  return explorerBase || 'https://blockbook.reddcoin.com';
 }
 
 // ── Generic cache ─────────────────────────────────────────────────────────────
@@ -82,11 +80,12 @@ async function lookupBySocialProof(platform, username) {
 // ── Block explorer ────────────────────────────────────────────────────────────
 
 /**
- * Fetch on-chain address info from an Insight-compatible API.
- * Returns { balance, totalReceived, txCount } or null on failure.
+ * Fetch on-chain address info.
+ * Tries Blockbook v2 API first (default: blockbook.reddcoin.com),
+ * falls back to Insight API format for self-hosted nodes.
  *
- * Insight API endpoint: GET /api/addr/{address}
- * Compatible with: reddcore insight, bitcore insight, blockbook (partial)
+ * Blockbook: GET /api/v2/address/{address}  — balances are satoshi strings
+ * Insight:   GET /api/addr/{address}         — balances are RDD floats
  */
 async function lookupAddressInfo(address) {
   const key = `explorer:${address}`;
@@ -97,17 +96,38 @@ async function lookupAddressInfo(address) {
     const explorerBase = await getExplorerBase();
     if (!explorerBase) { await setCache(key, null); return null; }
 
-    const res = await fetch(`${explorerBase}/api/addr/${encodeURIComponent(address)}`, {
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) { await setCache(key, null); return null; }
+    // Blockbook v2
+    const bbRes = await fetch(
+      `${explorerBase}/api/v2/address/${encodeURIComponent(address)}`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (bbRes.ok) {
+      const d = await bbRes.json();
+      // Blockbook returns satoshi values as decimal strings; RDD has 8 decimals
+      const sat = s => (parseInt(s || '0', 10) / 1e8);
+      const info = {
+        balance:       sat(d.balance),
+        totalReceived: sat(d.totalReceived),
+        totalSent:     sat(d.totalSent),
+        txCount:       d.txs ?? 0,
+        unconfirmed:   sat(d.unconfirmedBalance),
+      };
+      await setCache(key, info);
+      return info;
+    }
 
-    const d = await res.json();
+    // Insight fallback (for self-hosted reddcore nodes)
+    const insightRes = await fetch(
+      `${explorerBase}/api/addr/${encodeURIComponent(address)}`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (!insightRes.ok) { await setCache(key, null); return null; }
+    const d = await insightRes.json();
     const info = {
-      balance:       d.balance       ?? 0,
-      totalReceived: d.totalReceived ?? 0,
-      totalSent:     d.totalSent     ?? 0,
-      txCount:       d.txApperances  ?? 0, // insight typo is intentional
+      balance:       d.balance            ?? 0,
+      totalReceived: d.totalReceived      ?? 0,
+      totalSent:     d.totalSent          ?? 0,
+      txCount:       d.txApperances       ?? 0, // insight typo is intentional
       unconfirmed:   d.unconfirmedBalance ?? 0,
     };
     await setCache(key, info);
