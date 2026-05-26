@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.8.0] — 2026-05-25
+
+### Added
+- **E6 — Configurable tip button destination** (`options.html`, `options.js`, `popup.js`, `lib/reddid-platform-util.js`, 7 content scripts) — Settings page now has a "Tip Button Destination" card with a dropdown: "Tip page — redd.love/@handle" (default) or "Payment page — redd.love/pay/@handle"; setting saved to `chrome.storage.sync` as `tipUrlTarget`; applies to the popup's "Open tip page →" button and all in-page Tip RDD buttons on Bluesky, Mastodon, Rumble, TruthSocial, Odysee, Kick, and GitHub; Twitter/X, Reddit, YouTube, Twitch, Instagram, and TikTok are unaffected (standalone scripts, planned for next pass)
+
+### Changed
+- **`lib/reddid-platform-util.js`** — `tryLookup()` now reads `tipUrlTarget` from `chrome.storage.sync` and passes `tipTarget` in the callback object; `tipUrl()` accepts optional third parameter `target` (`'tip'` | `'pay'`) and returns the `/pay/{handle}` variant when `target === 'pay'`
+- **`content/bluesky.js`**, **`mastodon.js`**, **`rumble.js`**, **`truthsocial.js`**, **`odysee.js`**, **`kick.js`**, **`github.js`** — callback destructuring updated from `{ identity, apiBase }` to `{ identity, apiBase, tipTarget }`; `tipUrl` call updated to pass `tipTarget` as third arg
+- **`popup.js`** — `showResult()` reads `tipUrlTarget` from `chrome.storage.sync` and builds `openTipPage.href` accordingly
+- **`manifest.json`** — version bumped from `2.7.0` to `2.8.0`
+- **`popup.html`** — version badge updated from `v2.7` to `v2.8`
+
+---
+
 ## [2.7.0] — 2026-05-25
 
 ### Added

@@ -1,5 +1,5 @@
 /**
- * ReddID Love Button v2.7 — Popup controller
+ * ReddID Love Button v2.8 — Popup controller
  */
 
 'use strict';
@@ -211,7 +211,11 @@ async function showResult(identity) {
 
   const { base } = await sendMsg({ type: 'GET_API_BASE' });
   currentApiBase = base || 'https://redd.love';
-  openTipPage.href = `${currentApiBase}/${identity.handle}`;
+  const settings = await chrome.storage.sync.get({ tipUrlTarget: 'tip' });
+  const tipTarget = settings.tipUrlTarget || 'tip';
+  openTipPage.href = tipTarget === 'pay'
+    ? `${currentApiBase}/pay/${identity.handle}`
+    : `${currentApiBase}/${identity.handle}`;
 
   showState('result');
   detectedBanner.style.display = 'none';

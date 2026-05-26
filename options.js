@@ -5,9 +5,10 @@
 const DEFAULT_API_BASE      = 'https://redd.love';
 const DEFAULT_EXPLORER_BASE = 'https://blockbook.reddcoin.com';
 
-const apiInput      = document.getElementById('api-base');
-const explorerInput = document.getElementById('explorer-base');
-const saveBtn       = document.getElementById('save-btn');
+const apiInput         = document.getElementById('api-base');
+const explorerInput    = document.getElementById('explorer-base');
+const tipUrlTargetSel  = document.getElementById('tip-url-target');
+const saveBtn          = document.getElementById('save-btn');
 const resetBtn      = document.getElementById('reset-btn');
 const saveStatus    = document.getElementById('save-status');
 const clearCacheBtn = document.getElementById('clear-cache-btn');
@@ -41,12 +42,13 @@ function validateUrl(raw, fallback) {
 async function load() {
   // apiBase is in sync storage; explorerBase in local
   const [syncData, localData] = await Promise.all([
-    chrome.storage.sync.get(['apiBase']),
+    chrome.storage.sync.get(['apiBase', 'tipUrlTarget']),
     chrome.storage.local.get(['explorerBase']),
   ]);
 
-  apiInput.value      = syncData.apiBase      || DEFAULT_API_BASE;
-  explorerInput.value = localData.explorerBase || DEFAULT_EXPLORER_BASE;
+  apiInput.value            = syncData.apiBase      || DEFAULT_API_BASE;
+  explorerInput.value       = localData.explorerBase || DEFAULT_EXPLORER_BASE;
+  tipUrlTargetSel.value     = syncData.tipUrlTarget  || 'tip';
 
   extVersion.textContent = chrome.runtime.getManifest().version;
   refreshCacheCount();
@@ -77,8 +79,10 @@ saveBtn.addEventListener('click', async () => {
   apiInput.value      = api.value;
   explorerInput.value = explorer.value;
 
+  const tipUrlTarget = tipUrlTargetSel.value === 'pay' ? 'pay' : 'tip';
+
   await Promise.all([
-    chrome.storage.sync.set({ apiBase: api.value }),
+    chrome.storage.sync.set({ apiBase: api.value, tipUrlTarget }),
     chrome.storage.local.set({ explorerBase: explorer.value }),
   ]);
 
@@ -90,11 +94,12 @@ saveBtn.addEventListener('click', async () => {
 // ── Reset ─────────────────────────────────────────────────────────────────────
 
 resetBtn.addEventListener('click', async () => {
-  apiInput.value      = DEFAULT_API_BASE;
-  explorerInput.value = DEFAULT_EXPLORER_BASE;
+  apiInput.value        = DEFAULT_API_BASE;
+  explorerInput.value   = DEFAULT_EXPLORER_BASE;
+  tipUrlTargetSel.value = 'tip';
 
   await Promise.all([
-    chrome.storage.sync.set({ apiBase: DEFAULT_API_BASE }),
+    chrome.storage.sync.set({ apiBase: DEFAULT_API_BASE, tipUrlTarget: 'tip' }),
     chrome.storage.local.set({ explorerBase: DEFAULT_EXPLORER_BASE }),
   ]);
 
