@@ -1,5 +1,5 @@
 /**
- * ReddID Love Button v2.1 — Popup controller
+ * ReddID Love Button v2.6 — Popup controller
  */
 
 'use strict';
@@ -33,10 +33,12 @@ const balanceError   = $('balance-error');
 const balBalance     = $('bal-balance');
 const balReceived    = $('bal-received');
 const balTxcount     = $('bal-txcount');
-const historySection = $('history-section');
-const historyList    = $('history-list');
-const historyCount   = $('history-count');
-const optionsLink    = $('options-link');
+const historySection    = $('history-section');
+const historyList       = $('history-list');
+const historyCount      = $('history-count');
+const optionsLink       = $('options-link');
+const errorSuggestions  = $('error-suggestions');
+const shareBtn          = $('share-btn');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -145,6 +147,44 @@ function flashCopied(btn, originalText) {
   }, 1800);
 }
 
+// ── E1 — Not-found suggestions ────────────────────────────────────────────────
+
+async function fetchSuggestions(handle) {
+  errorSuggestions.innerHTML = '';
+  errorSuggestions.style.display = 'none';
+  try {
+    const { base } = await sendMsg({ type: 'GET_API_BASE' });
+    const apiBase = base || 'https://redd.love';
+    const res = await fetch(
+      `${apiBase}/api/search?q=${encodeURIComponent(handle)}&limit=3`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    const results = data.results ?? [];
+    if (!results.length) return;
+
+    const label = document.createElement('div');
+    label.className = 'suggest-label';
+    label.textContent = 'Did you mean?';
+    errorSuggestions.appendChild(label);
+
+    for (const r of results) {
+      const btn = document.createElement('button');
+      btn.className = 'suggest-item';
+      btn.innerHTML = `<span class="suggest-handle">@${escapeHtml(r.handle)}</span>${r.displayName ? ` — ${escapeHtml(r.displayName)}` : ''}`;
+      btn.addEventListener('click', () => {
+        searchInput.value = r.handle;
+        lookupHandle(r.handle);
+      });
+      errorSuggestions.appendChild(btn);
+    }
+    errorSuggestions.style.display = 'block';
+  } catch {
+    // silent — suggestions are best-effort
+  }
+}
+
 // ── Show result ───────────────────────────────────────────────────────────────
 
 async function showResult(identity) {
@@ -193,6 +233,10 @@ async function lookupHandle(raw) {
   const handle = (raw || '').trim().replace(/^@/, '').toLowerCase();
   if (!handle) return;
 
+  // Reset suggestions from any prior not-found
+  errorSuggestions.innerHTML = '';
+  errorSuggestions.style.display = 'none';
+
   loadingHandle.textContent = handle;
   showState('loading');
   searchBtn.disabled = true;
@@ -206,6 +250,8 @@ async function lookupHandle(raw) {
     $('error-msg').textContent =
       `@${handle} is not registered on ReddID.\nVisit redd.love to claim this handle.`;
     showState('error');
+    // E1 — offer fuzzy suggestions from /api/search
+    fetchSuggestions(handle);
   }
 }
 
@@ -313,6 +359,7 @@ async function autoLookupSocial(platform, username) {
   $('error-msg').textContent =
     `No ReddID found for ${username} on ${platform}.\nThey may not have registered yet.`;
   showState('error');
+  fetchSuggestions(username.toLowerCase());
 }
 
 async function checkCurrentTab() {
@@ -501,6 +548,10 @@ async function renderHistory() {
   for (const entry of history) {
     const item = document.createElement('div');
     item.className = 'history-item';
+    // E3 — make items keyboard-focusable
+    item.setAttribute('tabindex', '0');
+    item.setAttribute('role', 'button');
+    item.setAttribute('aria-label', `Look up @${entry.handle}`);
     item.innerHTML = `
       <div style="flex:1;min-width:0">
         <div class="history-handle">@${escapeHtml(entry.handle)}</div>
@@ -509,9 +560,39 @@ async function renderHistory() {
       <div style="font-size:9px;color:var(--dim);white-space:nowrap">${relativeTime(entry.timestamp)}</div>
     `;
     item.addEventListener('click', () => lookupHandle(entry.handle));
+    // E3 — Enter/Space to activate focused item
+    item.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        lookupHandle(entry.handle);
+      }
+    });
     historyList.appendChild(item);
   }
 }
+
+// ── E3 — History keyboard navigation ─────────────────────────────────────────
+
+historyList.addEventListener('keydown', e => {
+  const items = Array.from(historyList.querySelectorAll('.history-item'));
+  if (!items.length) return;
+  const focused = document.activeElement;
+  const idx = items.indexOf(focused);
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const next = idx < items.length - 1 ? items[idx + 1] : items[0];
+    next.focus();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    const prev = idx > 0 ? items[idx - 1] : items[items.length - 1];
+    prev.focus();
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    if (focused && focused !== document.body) focused.blur();
+    searchInput.focus();
+  }
+});
 
 // ── Event listeners ───────────────────────────────────────────────────────────
 
@@ -541,6 +622,14 @@ copyAddrBtn.addEventListener('click', async () => {
 copyHandleBtn.addEventListener('click', async () => {
   if (!currentIdentity?.handle) return;
   if (await copyText(`@${currentIdentity.handle}`)) flashCopied(copyHandleBtn, '@ Copy');
+});
+
+// ── E2 — Share tip page URL ───────────────────────────────────────────────────
+
+shareBtn.addEventListener('click', async () => {
+  if (!currentIdentity?.handle) return;
+  const url = `${currentApiBase}/${currentIdentity.handle}`;
+  if (await copyText(url)) flashCopied(shareBtn, '🔗 Share');
 });
 
 // ── Tip amount chips ──────────────────────────────────────────────────────────

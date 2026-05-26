@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.6.0] — 2026-05-25
+
+### Added
+- **E1 — Handle suggestions on not-found** (`popup.js`) — when a handle lookup returns no identity, `fetchSuggestions(handle)` fires automatically; calls `GET_API_BASE` then `{apiBase}/api/search?q={handle}&limit=3`; renders "Did you mean?" section with up to 3 clickable suggestion buttons inside `#error-suggestions`; clicking a suggestion pre-fills the search input and triggers lookup; silent on network/API error (best-effort)
+- **E2 — Share tip page URL** (`popup.html`, `popup.js`) — "🔗 Share" ghost button added to result actions row; click copies `{apiBase}/{handle}` to clipboard with `flashCopied` green feedback; uses the live `currentApiBase` so custom API configurations are respected
+- **E3 — History keyboard navigation** (`popup.html`, `popup.js`) — history items now carry `tabindex="0"` and `role="button"` attributes; `ArrowDown` / `ArrowUp` cycle focus through history items wrapping at boundaries; `Escape` blurs the list and returns focus to the search input; `Enter` / `Space` on a focused item triggers the lookup; focus state styled with red-tinted background and left border accent (CSS `.history-item:focus`)
+
+### Changed
+- **`popup.html`** — version badge updated from `v2.5` to `v2.6`
+- **`manifest.json`** — version bumped from `2.5.0` to `2.6.0`
+- **`popup.js`** — added `errorSuggestions` and `shareBtn` DOM refs; `lookupHandle()` and `autoLookupSocial()` both reset `#error-suggestions` on new lookup and call `fetchSuggestions()` on not-found; `renderHistory()` now sets `tabindex="0"`, `role`, `aria-label`, and `keydown` handler on each item; `historyList` receives a delegated `keydown` handler for ArrowDown/ArrowUp/Escape navigation
+
+---
+
 ## [2.5.1] — 2026-05-25
 
 ### Changed

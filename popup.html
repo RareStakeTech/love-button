@@ -464,6 +464,39 @@
     .txn-empty  { padding: 16px 14px; font-size: 11px; color: var(--dim); text-align: center; }
     .txn-loading { padding: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; color: var(--muted); }
 
+    /* ── E1 — Not-found suggestions ── */
+    #error-suggestions {
+      margin-top: 8px;
+    }
+    .suggest-label {
+      font-size: 10px;
+      color: var(--dim);
+      margin-bottom: 5px;
+    }
+    .suggest-item {
+      display: block;
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 6px 10px;
+      cursor: pointer;
+      text-align: left;
+      margin-bottom: 4px;
+      transition: all 0.12s;
+    }
+    .suggest-item:hover  { border-color: var(--muted); color: var(--text); }
+    .suggest-handle      { color: var(--red); font-weight: 600; }
+
+    /* ── E3 — History keyboard focus ── */
+    .history-item:focus {
+      outline: none;
+      background: rgba(227,6,19,0.08);
+      border-left: 2px solid var(--red);
+    }
+
     /* ── Footer ── */
     .footer {
       padding: 7px 14px;
@@ -484,7 +517,7 @@
       <span class="brand-badge">REDD</span>
       <span class="brand-name">ID Tip Button</span>
     </div>
-    <span class="version">v2.5</span>
+    <span class="version">v2.6</span>
   </div>
 
   <!-- Detected banner (auto-hidden if auto-lookup fires) -->
@@ -534,6 +567,8 @@
     <!-- Error -->
     <div class="state" id="state-error" style="display:none">
       <div class="error-msg" id="error-msg"></div>
+      <!-- E1 — suggestions populated by fetchSuggestions() on not-found -->
+      <div id="error-suggestions" style="display:none"></div>
     </div>
 
     <!-- Result -->
@@ -603,6 +638,8 @@
               Open tip page →
             </a>
             <button class="action-btn-ghost" id="copy-handle-btn">@ Copy</button>
+            <!-- E2 — share tip page URL -->
+            <button class="action-btn-ghost" id="share-btn">🔗 Share</button>
             <button class="action-btn-ghost" id="clear-btn">Clear</button>
           </div>
 
