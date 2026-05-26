@@ -1,6 +1,6 @@
 {
   "name": "reddid-love-button",
-  "version": "2.5.0",
+  "version": "2.10.1",
   "description": "ReddID Love Button — MV3 browser extension for RDD tips",
   "private": true,
   "scripts": {
