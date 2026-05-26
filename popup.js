@@ -1,5 +1,5 @@
 /**
- * ReddID Love Button v2.6 — Popup controller
+ * ReddID Love Button v2.7 — Popup controller
  */
 
 'use strict';
@@ -39,6 +39,7 @@ const historyCount      = $('history-count');
 const optionsLink       = $('options-link');
 const errorSuggestions  = $('error-suggestions');
 const shareBtn          = $('share-btn');
+const embedBtn          = $('embed-btn');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -630,6 +631,17 @@ shareBtn.addEventListener('click', async () => {
   if (!currentIdentity?.handle) return;
   const url = `${currentApiBase}/${currentIdentity.handle}`;
   if (await copyText(url)) flashCopied(shareBtn, '🔗 Share');
+});
+
+// ── E4 — Embed badge HTML snippet ─────────────────────────────────────────────
+
+embedBtn.addEventListener('click', async () => {
+  if (!currentIdentity?.handle) return;
+  const handle = currentIdentity.handle;
+  const tipUrl = `${currentApiBase}/${handle}`;
+  // Self-contained inline button badge — no external assets required
+  const snippet = `<a href="${tipUrl}" style="display:inline-flex;align-items:center;gap:6px;background:#E30613;color:#fff;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;font-weight:700;padding:6px 14px;border-radius:5px;line-height:1">Ɍ Tip @${handle}</a>`;
+  if (await copyText(snippet)) flashCopied(embedBtn, '📋 Embed');
 });
 
 // ── Tip amount chips ──────────────────────────────────────────────────────────

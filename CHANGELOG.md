@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.7.0] — 2026-05-25
+
+### Added
+- **E4 — Embed badge HTML snippet** (`popup.html`, `popup.js`) — "📋 Embed" ghost button in the result actions row; click generates a self-contained `<a>` button badge in ReddID red (`#E30613`) linking to the creator's tip page; copies the full HTML to clipboard with `flashCopied` green feedback; no external assets required — the badge is pure inline CSS so it renders on any HTML page; respects the live `currentApiBase` for custom API configurations
+
+### Changed
+- **`manifest.json`** — version bumped from `2.6.0` to `2.7.0`
+- **`popup.html`** — version badge updated from `v2.6` to `v2.7`; `#embed-btn` added to result actions row
+
+---
+
 ## [2.6.0] — 2026-05-25
 
 ### Added
