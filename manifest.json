@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ReddID — Tip with RDD",
   "short_name": "ReddID Tip",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "Ɍ RDD tips for creators on X, Reddit, YouTube, Twitch, Instagram, TikTok, Bluesky, Mastodon, Rumble, GitHub & more. Via ReddID.",
 
   "icons": {

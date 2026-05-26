@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.9.0] — 2026-05-25
+
+### Changed
+- **E6 — Full coverage for configurable tip button destination** — the remaining 6 standalone content scripts (Twitter/X, Reddit, YouTube, Twitch, Instagram, TikTok) now also respect the `tipUrlTarget` setting; each `checkPage()` / `checkProfile()` function fetches `tipUrlTarget` from `chrome.storage.sync` in parallel with `GET_API_BASE` using `Promise.all()`; `injectTipButton()` signature updated to accept `tipTarget` as third parameter and builds the URL as `/pay/{handle}` when `tipTarget === 'pay'`; all 13 platforms now fully supported
+- **`options.html`** — hint text updated: removed the "Twitter/X, Reddit…TikTok not yet updated" caveat; now reads "Applies to the popup and all in-page Tip RDD buttons injected on all 13 supported platforms"
+- **`manifest.json`** — version bumped from `2.8.0` to `2.9.0`
+- Firefox (`love-button-firefox`) — same changes mirrored to all 6 Firefox content scripts
+
+---
+
 ## [2.8.0] — 2026-05-25
 
 ### Added
