@@ -437,15 +437,8 @@
       transition: border-color 0.12s, background 0.12s, color 0.12s;
       cursor: default;
     }
-    /* Clickable (link) badges */
-    a.social-badge {
-      cursor: pointer;
-    }
-    a.social-badge:hover {
-      border-color: var(--muted);
-      color: var(--text);
-    }
-    /* Proof-linked: a challenge post URL was submitted */
+    a.social-badge { cursor: pointer; }
+    a.social-badge:hover { border-color: var(--muted); color: var(--text); }
     .social-badge--linked {
       border-color: rgba(74,222,128,0.2);
       background: rgba(74,222,128,0.04);
@@ -454,20 +447,10 @@
       border-color: rgba(74,222,128,0.5);
       background: rgba(74,222,128,0.09);
     }
-    /* Status dot */
-    .proof-dot {
-      font-size: 7px;
-      line-height: 1;
-      margin-left: 2px;
-    }
+    .proof-dot { font-size: 7px; line-height: 1; margin-left: 2px; }
     .proof-dot--linked { color: var(--green); }
     .proof-dot--self   { color: var(--dim); }
-    /* Platform icon */
-    .plat-icon {
-      font-style: normal;
-      font-size: 9px;
-      opacity: 0.75;
-    }
+    .plat-icon { font-style: normal; font-size: 9px; opacity: 0.75; }
 
     /* ── Transactions tab ── */
     .txn-list {
@@ -487,39 +470,6 @@
     .txn-id     { font-size: 9px; color: var(--dim); font-family: monospace; }
     .txn-empty  { padding: 16px 14px; font-size: 11px; color: var(--dim); text-align: center; }
     .txn-loading { padding: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; color: var(--muted); }
-
-    /* ── E1 — Not-found suggestions ── */
-    #error-suggestions {
-      margin-top: 8px;
-    }
-    .suggest-label {
-      font-size: 10px;
-      color: var(--dim);
-      margin-bottom: 5px;
-    }
-    .suggest-item {
-      display: block;
-      width: 100%;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      color: var(--muted);
-      font-size: 11px;
-      padding: 6px 10px;
-      cursor: pointer;
-      text-align: left;
-      margin-bottom: 4px;
-      transition: all 0.12s;
-    }
-    .suggest-item:hover  { border-color: var(--muted); color: var(--text); }
-    .suggest-handle      { color: var(--red); font-weight: 600; }
-
-    /* ── E3 — History keyboard focus ── */
-    .history-item:focus {
-      outline: none;
-      background: rgba(227,6,19,0.08);
-      border-left: 2px solid var(--red);
-    }
 
     /* ── Footer ── */
     .footer {
@@ -541,7 +491,7 @@
       <span class="brand-badge">REDD</span>
       <span class="brand-name">ID Tip Button</span>
     </div>
-    <span class="version">v2.10</span>
+    <span class="version">v2.5</span>
   </div>
 
   <!-- Detected banner (auto-hidden if auto-lookup fires) -->
@@ -591,8 +541,6 @@
     <!-- Error -->
     <div class="state" id="state-error" style="display:none">
       <div class="error-msg" id="error-msg"></div>
-      <!-- E1 — suggestions populated by fetchSuggestions() on not-found -->
-      <div id="error-suggestions" style="display:none"></div>
     </div>
 
     <!-- Result -->
@@ -662,10 +610,6 @@
               Open tip page →
             </a>
             <button class="action-btn-ghost" id="copy-handle-btn">@ Copy</button>
-            <!-- E2 — share tip page URL -->
-            <button class="action-btn-ghost" id="share-btn">🔗 Share</button>
-            <!-- E4 — embed badge HTML snippet -->
-            <button class="action-btn-ghost" id="embed-btn">📋 Embed</button>
             <button class="action-btn-ghost" id="clear-btn">Clear</button>
           </div>
 

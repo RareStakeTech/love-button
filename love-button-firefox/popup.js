@@ -1,5 +1,5 @@
 /**
- * ReddID Love Button v2.9 — Popup controller
+ * ReddID Love Button v2.1 — Popup controller
  */
 
 'use strict';
@@ -33,13 +33,10 @@ const balanceError   = $('balance-error');
 const balBalance     = $('bal-balance');
 const balReceived    = $('bal-received');
 const balTxcount     = $('bal-txcount');
-const historySection    = $('history-section');
-const historyList       = $('history-list');
-const historyCount      = $('history-count');
-const optionsLink       = $('options-link');
-const errorSuggestions  = $('error-suggestions');
-const shareBtn          = $('share-btn');
-const embedBtn          = $('embed-btn');
+const historySection = $('history-section');
+const historyList    = $('history-list');
+const historyCount   = $('history-count');
+const optionsLink    = $('options-link');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -148,44 +145,6 @@ function flashCopied(btn, originalText) {
   }, 1800);
 }
 
-// ── E1 — Not-found suggestions ────────────────────────────────────────────────
-
-async function fetchSuggestions(handle) {
-  errorSuggestions.innerHTML = '';
-  errorSuggestions.style.display = 'none';
-  try {
-    const { base } = await sendMsg({ type: 'GET_API_BASE' });
-    const apiBase = base || 'https://redd.love';
-    const res = await fetch(
-      `${apiBase}/api/search?q=${encodeURIComponent(handle)}&limit=3`,
-      { signal: AbortSignal.timeout(5000) }
-    );
-    if (!res.ok) return;
-    const data = await res.json();
-    const results = data.results ?? [];
-    if (!results.length) return;
-
-    const label = document.createElement('div');
-    label.className = 'suggest-label';
-    label.textContent = 'Did you mean?';
-    errorSuggestions.appendChild(label);
-
-    for (const r of results) {
-      const btn = document.createElement('button');
-      btn.className = 'suggest-item';
-      btn.innerHTML = `<span class="suggest-handle">@${escapeHtml(r.handle)}</span>${r.displayName ? ` — ${escapeHtml(r.displayName)}` : ''}`;
-      btn.addEventListener('click', () => {
-        searchInput.value = r.handle;
-        lookupHandle(r.handle);
-      });
-      errorSuggestions.appendChild(btn);
-    }
-    errorSuggestions.style.display = 'block';
-  } catch {
-    // silent — suggestions are best-effort
-  }
-}
-
 // ── Show result ───────────────────────────────────────────────────────────────
 
 async function showResult(identity) {
@@ -211,11 +170,7 @@ async function showResult(identity) {
 
   const { base } = await sendMsg({ type: 'GET_API_BASE' });
   currentApiBase = base || 'https://redd.love';
-  const settings = await chrome.storage.sync.get({ tipUrlTarget: 'tip' });
-  const tipTarget = settings.tipUrlTarget || 'tip';
-  openTipPage.href = tipTarget === 'pay'
-    ? `${currentApiBase}/pay/${identity.handle}`
-    : `${currentApiBase}/${identity.handle}`;
+  openTipPage.href = `${currentApiBase}/${identity.handle}`;
 
   showState('result');
   detectedBanner.style.display = 'none';
@@ -238,10 +193,6 @@ async function lookupHandle(raw) {
   const handle = (raw || '').trim().replace(/^@/, '').toLowerCase();
   if (!handle) return;
 
-  // Reset suggestions from any prior not-found
-  errorSuggestions.innerHTML = '';
-  errorSuggestions.style.display = 'none';
-
   loadingHandle.textContent = handle;
   showState('loading');
   searchBtn.disabled = true;
@@ -255,8 +206,6 @@ async function lookupHandle(raw) {
     $('error-msg').textContent =
       `@${handle} is not registered on ReddID.\nVisit redd.love to claim this handle.`;
     showState('error');
-    // E1 — offer fuzzy suggestions from /api/search
-    fetchSuggestions(handle);
   }
 }
 
@@ -364,7 +313,6 @@ async function autoLookupSocial(platform, username) {
   $('error-msg').textContent =
     `No ReddID found for ${username} on ${platform}.\nThey may not have registered yet.`;
   showState('error');
-  fetchSuggestions(username.toLowerCase());
 }
 
 async function checkCurrentTab() {
@@ -439,10 +387,6 @@ const PLAT_NAMES = {
   kick:        'Kick',
 };
 
-/**
- * Build a direct profile URL for a given platform + username.
- * Returns null if the platform is unrecognised.
- */
 function socialProfileUrl(platform, username) {
   switch (platform) {
     case 'twitter':     return `https://twitter.com/${username}`;
@@ -454,7 +398,6 @@ function socialProfileUrl(platform, username) {
     case 'github':      return `https://github.com/${username}`;
     case 'bluesky':     return `https://bsky.app/profile/${username}`;
     case 'mastodon': {
-      // username stored as "user@instance.social" for federated accounts
       if (username.includes('@')) {
         const [user, host] = username.split('@');
         return `https://${host}/@${user}`;
@@ -482,8 +425,6 @@ function renderSocialProofs(identity) {
     const icon     = PLAT_ICONS[p.platform] ?? '🔗';
     const name     = PLAT_NAMES[p.platform]  ?? p.platform;
     const url      = socialProfileUrl(p.platform, p.username);
-    // "verified" status means a challenge proof URL was submitted and accepted —
-    // NOT independently verified via platform API (reserved for v0.5+).
     const isLinked = p.verificationStatus === 'verified';
 
     const statusDot = isLinked
@@ -613,10 +554,6 @@ async function renderHistory() {
   for (const entry of history) {
     const item = document.createElement('div');
     item.className = 'history-item';
-    // E3 — make items keyboard-focusable
-    item.setAttribute('tabindex', '0');
-    item.setAttribute('role', 'button');
-    item.setAttribute('aria-label', `Look up @${entry.handle}`);
     item.innerHTML = `
       <div style="flex:1;min-width:0">
         <div class="history-handle">@${escapeHtml(entry.handle)}</div>
@@ -625,39 +562,9 @@ async function renderHistory() {
       <div style="font-size:9px;color:var(--dim);white-space:nowrap">${relativeTime(entry.timestamp)}</div>
     `;
     item.addEventListener('click', () => lookupHandle(entry.handle));
-    // E3 — Enter/Space to activate focused item
-    item.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        lookupHandle(entry.handle);
-      }
-    });
     historyList.appendChild(item);
   }
 }
-
-// ── E3 — History keyboard navigation ─────────────────────────────────────────
-
-historyList.addEventListener('keydown', e => {
-  const items = Array.from(historyList.querySelectorAll('.history-item'));
-  if (!items.length) return;
-  const focused = document.activeElement;
-  const idx = items.indexOf(focused);
-
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    const next = idx < items.length - 1 ? items[idx + 1] : items[0];
-    next.focus();
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    const prev = idx > 0 ? items[idx - 1] : items[items.length - 1];
-    prev.focus();
-  } else if (e.key === 'Escape') {
-    e.preventDefault();
-    if (focused && focused !== document.body) focused.blur();
-    searchInput.focus();
-  }
-});
 
 // ── Event listeners ───────────────────────────────────────────────────────────
 
@@ -687,25 +594,6 @@ copyAddrBtn.addEventListener('click', async () => {
 copyHandleBtn.addEventListener('click', async () => {
   if (!currentIdentity?.handle) return;
   if (await copyText(`@${currentIdentity.handle}`)) flashCopied(copyHandleBtn, '@ Copy');
-});
-
-// ── E2 — Share tip page URL ───────────────────────────────────────────────────
-
-shareBtn.addEventListener('click', async () => {
-  if (!currentIdentity?.handle) return;
-  const url = `${currentApiBase}/${currentIdentity.handle}`;
-  if (await copyText(url)) flashCopied(shareBtn, '🔗 Share');
-});
-
-// ── E4 — Embed badge HTML snippet ─────────────────────────────────────────────
-
-embedBtn.addEventListener('click', async () => {
-  if (!currentIdentity?.handle) return;
-  const handle = currentIdentity.handle;
-  const tipUrl = `${currentApiBase}/${handle}`;
-  // Self-contained inline button badge — no external assets required
-  const snippet = `<a href="${tipUrl}" style="display:inline-flex;align-items:center;gap:6px;background:#E30613;color:#fff;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;font-weight:700;padding:6px 14px;border-radius:5px;line-height:1">Ɍ Tip @${handle}</a>`;
-  if (await copyText(snippet)) flashCopied(embedBtn, '📋 Embed');
 });
 
 // ── Tip amount chips ──────────────────────────────────────────────────────────

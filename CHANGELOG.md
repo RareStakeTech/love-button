@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.10.0] — 2026-05-26
+
+### Changed
+- **E7 — Richer social proof badges** (`popup.html`, `popup.js`) — social proof section redesigned: each badge is now a clickable `<a>` that opens the creator's profile on that platform in a new tab; badges show the platform short name (e.g. "X", "YouTube", "GitHub") with a small icon prefix rather than the raw username; a colour-coded status dot indicates proof level: green ● for proof-URL-on-record, grey ○ for self-reported; proof-linked badges get a green-tinted border and background; tooltip (`title`) reveals the full `@username on PlatformName`; added `PLAT_NAMES` map and `socialProfileUrl(platform, username)` function covering all 13 platforms including federated Mastodon (`user@instance`) handling; Firefox popup mirrored
+- **`manifest.json`** — version bumped from `2.9.0` to `2.10.0`
+- **`popup.html`** — version badge updated from `v2.9` to `v2.10`; CSS updated: `.social-badge` gains link hover transition; `.social-badge--linked` adds green tint; `.proof-dot--linked/--self` status dots; `.plat-icon` italic suppression
+
+---
+
 ## [2.9.0] — 2026-05-25
 
 ### Changed
